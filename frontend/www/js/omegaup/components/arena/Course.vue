@@ -478,16 +478,29 @@ export default class ArenaCourse extends Vue {
 @import '../../../../sass/main.scss';
 
 .navleft {
-  overflow: hidden;
+  overflow: visible;
+  position: relative;
 
   .navbar {
     width: 21em;
     float: left;
-    background: transparent;
-  }
+    position: sticky;
+    top: 0;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: var(--arena-background-color);
+    z-index: 100;
+    padding-right: 0.5em;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
 
+    &::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Opera */
+    }
+  }
   .main {
-    margin-left: 20em;
+    margin-left: 21em;
     border: 1px solid var(--arena-contest-navleft-main-border-color);
     border-width: 0 0 1px 1px;
   }
