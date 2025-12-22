@@ -491,7 +491,6 @@ export default class ArenaCourse extends Vue {
     overflow-x: hidden;
     background: var(--arena-background-color);
     z-index: 100;
-    padding-right: 0.5em;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE and Edge */
 
