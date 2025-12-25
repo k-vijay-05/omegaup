@@ -486,17 +486,13 @@ export default class ArenaCourse extends Vue {
     float: left;
     position: sticky;
     top: 0;
-    max-height: calc(100vh - 200px);
+    max-height: calc(100vh - 250px);
     overflow-y: auto;
     overflow-x: hidden;
     background: var(--arena-background-color);
     z-index: 100;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
-
-    &::-webkit-scrollbar {
-      display: none; /* Chrome, Safari, Opera */
-    }
+    scrollbar-width: none;
+    padding-top: 1.5rem;
   }
   .main {
     margin-left: 21em;
