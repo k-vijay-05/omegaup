@@ -163,6 +163,7 @@ export default class Arena extends Vue {
   overflow-x: hidden;
   min-height: 0;
   position: relative;
+  scrollbar-width: none;
 }
 
 .socket-status-error {
