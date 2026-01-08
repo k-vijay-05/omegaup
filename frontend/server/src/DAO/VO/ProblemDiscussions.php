@@ -1,0 +1,158 @@
+<?php
+/** ************************************************************************ *
+ *                    !ATENCION!                                             *
+ *                                                                           *
+ * Este codigo es generado automáticamente. Si lo modificas, tus cambios     *
+ * serán reemplazados la proxima vez que se autogenere el código.            *
+ *                                                                           *
+ * ************************************************************************* */
+
+namespace OmegaUp\DAO\VO;
+
+/**
+ * Value Object class for table `Problem_Discussions`.
+ *
+ * @access public
+ */
+class ProblemDiscussions extends \OmegaUp\DAO\VO\VO {
+    const FIELD_NAMES = [
+        'discussion_id' => true,
+        'problem_id' => true,
+        'identity_id' => true,
+        'content' => true,
+        'upvotes' => true,
+        'downvotes' => true,
+        'created_at' => true,
+        'updated_at' => true,
+    ];
+
+    public function __construct(?array $data = null) {
+        if (empty($data)) {
+            return;
+        }
+        $unknownColumns = array_diff_key($data, self::FIELD_NAMES);
+        if (!empty($unknownColumns)) {
+            throw new \Exception(
+                'Unknown columns: ' . join(', ', array_keys($unknownColumns))
+            );
+        }
+        if (isset($data['discussion_id'])) {
+            $this->discussion_id = intval(
+                $data['discussion_id']
+            );
+        }
+        if (isset($data['problem_id'])) {
+            $this->problem_id = intval(
+                $data['problem_id']
+            );
+        }
+        if (isset($data['identity_id'])) {
+            $this->identity_id = intval(
+                $data['identity_id']
+            );
+        }
+        if (isset($data['content'])) {
+            $this->content = is_scalar(
+                $data['content']
+            ) ? strval($data['content']) : '';
+        }
+        if (isset($data['upvotes'])) {
+            $this->upvotes = intval(
+                $data['upvotes']
+            );
+        }
+        if (isset($data['downvotes'])) {
+            $this->downvotes = intval(
+                $data['downvotes']
+            );
+        }
+        if (isset($data['created_at'])) {
+            /**
+             * @var \OmegaUp\Timestamp|string|int|float $data['created_at']
+             * @var \OmegaUp\Timestamp $this->created_at
+             */
+            $this->created_at = (
+                \OmegaUp\DAO\DAO::fromMySQLTimestamp(
+                    $data['created_at']
+                )
+            );
+        } else {
+            $this->created_at = new \OmegaUp\Timestamp(
+                \OmegaUp\Time::get()
+            );
+        }
+        if (isset($data['updated_at'])) {
+            /**
+             * @var \OmegaUp\Timestamp|string|int|float $data['updated_at']
+             * @var \OmegaUp\Timestamp $this->updated_at
+             */
+            $this->updated_at = (
+                \OmegaUp\DAO\DAO::fromMySQLTimestamp(
+                    $data['updated_at']
+                )
+            );
+        } else {
+            $this->updated_at = new \OmegaUp\Timestamp(
+                \OmegaUp\Time::get()
+            );
+        }
+    }
+
+    /**
+     * [Campo no documentado]
+     * Llave Primaria
+     * Auto Incremento
+     *
+     * @var int|null
+     */
+    public $discussion_id = 0;
+
+    /**
+     * El problema al que pertenece esta discusión
+     *
+     * @var int|null
+     */
+    public $problem_id = null;
+
+    /**
+     * Identidad del usuario que creó el comentario
+     *
+     * @var int|null
+     */
+    public $identity_id = null;
+
+    /**
+     * Contenido del comentario en formato markdown
+     *
+     * @var string|null
+     */
+    public $content = null;
+
+    /**
+     * Número de votos positivos
+     *
+     * @var int
+     */
+    public $upvotes = 0;
+
+    /**
+     * Número de votos negativos
+     *
+     * @var int
+     */
+    public $downvotes = 0;
+
+    /**
+     * Fecha de creación del comentario
+     *
+     * @var \OmegaUp\Timestamp
+     */
+    public $created_at;  // CURRENT_TIMESTAMP
+
+    /**
+     * Fecha de última actualización
+     *
+     * @var \OmegaUp\Timestamp
+     */
+    public $updated_at;  // CURRENT_TIMESTAMP
+}
