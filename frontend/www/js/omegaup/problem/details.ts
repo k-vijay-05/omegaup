@@ -90,6 +90,10 @@ OmegaUp.on('ready', async () => {
       createdGuid: '',
       searchResultUsers: searchResultEmpty,
       searchResultProblems: searchResultEmpty,
+      discussions: [] as types.Discussion[],
+      discussionReplies: {} as { [key: number]: types.Reply[] },
+      totalDiscussions: 0,
+      isLoadingDiscussions: false,
     }),
     render: function (createElement) {
       return createElement('omegaup-problem-details', {
@@ -126,6 +130,10 @@ OmegaUp.on('ready', async () => {
           searchResultProblems: this.searchResultProblems,
           problemAlias: payload.problem.alias,
           totalRuns: runsStore.state.totalRuns,
+          discussions: this.discussions,
+          discussionReplies: this.discussionReplies,
+          totalDiscussions: this.totalDiscussions,
+          isLoadingDiscussions: this.isLoadingDiscussions,
         },
         on: {
           'show-run': (request: SubmissionRequest) => {
@@ -435,6 +443,149 @@ OmegaUp.on('ready', async () => {
                 );
               })
               .catch(ui.apiError);
+          },
+          'load-discussions': (request: {
+            problem_alias: string;
+            page: number;
+            page_size: number;
+            sort_by: 'created_at' | 'upvotes';
+            order: string;
+          }) => {
+            this.isLoadingDiscussions = true;
+            api.ProblemDiscussion.list(request)
+              .then((response: any) => {
+                this.discussions = response.discussions;
+                this.totalDiscussions = response.total;
+              })
+              .catch(() => {
+                ui.error(
+                  T.errorLoadingDiscussions || 'Error loading discussions',
+                );
+              })
+              .finally(() => {
+                this.isLoadingDiscussions = false;
+              });
+          },
+          'post-comment': (
+            request: {
+              problem_alias: string;
+              content: string;
+            } | null,
+          ) => {
+            if (!request) return;
+            api.ProblemDiscussion.create(request)
+              .then(() => {
+                ui.success(
+                  T.discussionCommentPosted || 'Comment posted successfully',
+                );
+                // Reload discussions - trigger load-discussions event
+                const loadRequest = {
+                  problem_alias: request.problem_alias,
+                  page: 1,
+                  page_size: 10,
+                  sort_by: 'created_at' as 'created_at' | 'upvotes',
+                  order: 'DESC',
+                };
+                // Call the handler directly
+                problemDetailsView.$data.isLoadingDiscussions = true;
+                api.ProblemDiscussion.list(loadRequest)
+                  .then((response: any) => {
+                    problemDetailsView.$data.discussions = response.discussions;
+                    problemDetailsView.$data.totalDiscussions = response.total;
+                  })
+                  .catch(() => {
+                    ui.error(
+                      T.errorLoadingDiscussions || 'Error loading discussions',
+                    );
+                  })
+                  .finally(() => {
+                    problemDetailsView.$data.isLoadingDiscussions = false;
+                  });
+              })
+              .catch(() => {
+                ui.error(T.errorPostingComment || 'Error posting comment');
+              });
+          },
+          vote: (request: { discussion_id: number; vote_type: string }) => {
+            api.ProblemDiscussion.vote(request)
+              .then((response: any) => {
+                const discussion = this.discussions.find(
+                  (d: any) => d.discussion_id === request.discussion_id,
+                );
+                if (discussion) {
+                  discussion.upvotes = response.upvotes;
+                  discussion.downvotes = response.downvotes;
+                }
+              })
+              .catch(() => {
+                ui.error(T.errorVoting || 'Error voting');
+              });
+          },
+          'load-replies': (request: { discussion_id: number }) => {
+            api.ProblemDiscussion.getReplies(request)
+              .then((response: any) => {
+                this.$set(
+                  this.discussionReplies,
+                  request.discussion_id,
+                  response.replies,
+                );
+              })
+              .catch(() => {
+                ui.error(T.errorLoadingReplies || 'Error loading replies');
+              });
+          },
+          'post-reply': (
+            request: {
+              discussion_id: number;
+              content: string;
+            } | null,
+          ) => {
+            if (!request) return;
+            api.ProblemDiscussion.createReply(request)
+              .then(() => {
+                ui.success(T.replyPosted || 'Reply posted successfully');
+                // Reload replies
+                api.ProblemDiscussion.getReplies({
+                  discussion_id: request.discussion_id,
+                })
+                  .then((response: any) => {
+                    this.$set(
+                      this.discussionReplies,
+                      request.discussion_id,
+                      response.replies,
+                    );
+                    // Update reply count in discussions
+                    const discussion = this.discussions.find(
+                      (d: any) => d.discussion_id === request.discussion_id,
+                    );
+                    if (discussion) {
+                      discussion.reply_count = response.replies.length;
+                    }
+                  })
+                  .catch(() => {
+                    ui.error(T.errorLoadingReplies || 'Error loading replies');
+                  });
+              })
+              .catch(() => {
+                ui.error(T.errorPostingReply || 'Error posting reply');
+              });
+          },
+          report: (
+            request: {
+              discussion_id: number;
+              reason: string;
+            } | null,
+          ) => {
+            if (!request) return;
+            api.ProblemDiscussion.report(request)
+              .then(() => {
+                ui.success(
+                  T.reportSubmitted || 'Report submitted successfully',
+                );
+              })
+              .catch(() => {
+                ui.error(T.errorReporting || 'Error submitting report');
+              });
           },
         },
       });

@@ -380,6 +380,24 @@
         >
         </omegaup-problem-solution>
       </div>
+      <div
+        class="tab-pane fade p-4"
+        :class="{ 'show active': selectedTab === 'discussion' }"
+      >
+        <omegaup-problem-discussion
+          :problem-alias="problem.alias"
+          :discussions="discussions"
+          :discussion-replies="discussionReplies"
+          :total-discussions="totalDiscussions"
+          :is-loading-discussions="isLoadingDiscussions"
+          @load-discussions="$emit('load-discussions', $event)"
+          @post-comment="$emit('post-comment', $event)"
+          @vote="$emit('vote', $event)"
+          @load-replies="$emit('load-replies', $event)"
+          @post-reply="$emit('post-reply', $event)"
+          @report="$emit('report', $event)"
+        ></omegaup-problem-discussion>
+      </div>
     </div>
   </div>
 </template>
@@ -406,6 +424,7 @@ import user_Username from '../user/Username.vue';
 import omegaup_problemMarkdown from './Markdown.vue';
 import omegaup_Overlay from '../Overlay.vue';
 import problem_soltion from './Solution.vue';
+import problem_Discussion from './Discussion.vue';
 
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
@@ -444,6 +463,7 @@ export enum PopupDisplayed {
   components: {
     FontAwesomeIcon,
     'omegaup-problem-solution': problem_soltion,
+    'omegaup-problem-discussion': problem_Discussion,
     'omegaup-arena-clarification-list': arena_ClarificationList,
     'omegaup-arena-ephemeral-grader': arena_EphemeralGrader,
     'omegaup-arena-runs': arena_Runs,
@@ -509,6 +529,12 @@ export default class ProblemDetails extends Vue {
   @Prop({ default: () => new Map<number, ArenaCourseFeedback>() })
   feedbackThreadMap!: Map<number, ArenaCourseFeedback>;
   @Prop({ default: true }) useNewVerdictTable!: boolean;
+  @Prop({ default: () => [] }) discussions!: types.Discussion[];
+  @Prop({ default: () => ({}) }) discussionReplies!: {
+    [key: number]: types.Reply[];
+  };
+  @Prop({ default: 0 }) totalDiscussions!: number;
+  @Prop({ default: false }) isLoadingDiscussions!: boolean;
 
   @Ref('statement-markdown')
   readonly statementMarkdown!: omegaup_problemMarkdown;
@@ -544,6 +570,11 @@ export default class ProblemDetails extends Vue {
       {
         name: 'solution',
         text: T.wordsSeeSolution,
+        visible: true,
+      },
+      {
+        name: 'discussion',
+        text: T.wordsDiscussion || 'Discussion',
         visible: true,
       },
     ];
