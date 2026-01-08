@@ -177,6 +177,15 @@
   - [`/api/problem/updateSolution/`](#apiproblemupdatesolution)
   - [`/api/problem/updateStatement/`](#apiproblemupdatestatement)
   - [`/api/problem/versions/`](#apiproblemversions)
+- [ProblemDiscussion](#problemdiscussion)
+  - [`/api/problemDiscussion/create/`](#apiproblemdiscussioncreate)
+  - [`/api/problemDiscussion/createReply/`](#apiproblemdiscussioncreatereply)
+  - [`/api/problemDiscussion/delete/`](#apiproblemdiscussiondelete)
+  - [`/api/problemDiscussion/getReplies/`](#apiproblemdiscussiongetreplies)
+  - [`/api/problemDiscussion/list/`](#apiproblemdiscussionlist)
+  - [`/api/problemDiscussion/report/`](#apiproblemdiscussionreport)
+  - [`/api/problemDiscussion/update/`](#apiproblemdiscussionupdate)
+  - [`/api/problemDiscussion/vote/`](#apiproblemdiscussionvote)
 - [ProblemForfeited](#problemforfeited)
   - [`/api/problemForfeited/getCounts/`](#apiproblemforfeitedgetcounts)
 - [Problemset](#problemset)
@@ -3604,6 +3613,160 @@ Entry point for Problem Versions API
 | ----------- | ------------------------ |
 | `log`       | `types.ProblemVersion[]` |
 | `published` | `string`                 |
+
+# ProblemDiscussion
+
+ProblemDiscussionController
+
+## `/api/problemDiscussion/create/`
+
+### Description
+
+Create a new discussion comment
+
+### Parameters
+
+| Name            | Type     | Description |
+| --------------- | -------- | ----------- |
+| `content`       | `string` |             |
+| `problem_alias` | `string` |             |
+
+### Returns
+
+| Name            | Type     |
+| --------------- | -------- |
+| `discussion_id` | `number` |
+
+## `/api/problemDiscussion/createReply/`
+
+### Description
+
+Create a reply to a discussion
+
+### Parameters
+
+| Name            | Type     | Description |
+| --------------- | -------- | ----------- |
+| `content`       | `string` |             |
+| `discussion_id` | `int`    |             |
+
+### Returns
+
+| Name       | Type     |
+| ---------- | -------- |
+| `reply_id` | `number` |
+
+## `/api/problemDiscussion/delete/`
+
+### Description
+
+Delete a discussion comment (only by owner)
+
+### Parameters
+
+| Name            | Type  | Description |
+| --------------- | ----- | ----------- |
+| `discussion_id` | `int` |             |
+
+### Returns
+
+_Nothing_
+
+## `/api/problemDiscussion/getReplies/`
+
+### Description
+
+Get replies for a discussion
+
+### Parameters
+
+| Name            | Type  | Description |
+| --------------- | ----- | ----------- |
+| `discussion_id` | `int` |             |
+
+### Returns
+
+```typescript
+types.ReplyListPayload;
+```
+
+## `/api/problemDiscussion/list/`
+
+### Description
+
+Get discussions for a problem
+
+### Parameters
+
+| Name            | Type           | Description |
+| --------------- | -------------- | ----------- |
+| `problem_alias` | `string`       |             |
+| `order`         | `null\|string` |             |
+| `page`          | `int\|null`    |             |
+| `page_size`     | `int\|null`    |             |
+| `sort_by`       | `null\|string` |             |
+
+### Returns
+
+```typescript
+types.DiscussionListPayload;
+```
+
+## `/api/problemDiscussion/report/`
+
+### Description
+
+Report a discussion
+
+### Parameters
+
+| Name            | Type     | Description |
+| --------------- | -------- | ----------- |
+| `discussion_id` | `int`    |             |
+| `reason`        | `string` |             |
+
+### Returns
+
+| Name        | Type     |
+| ----------- | -------- |
+| `report_id` | `number` |
+
+## `/api/problemDiscussion/update/`
+
+### Description
+
+Update a discussion comment (only by owner)
+
+### Parameters
+
+| Name            | Type     | Description |
+| --------------- | -------- | ----------- |
+| `content`       | `string` |             |
+| `discussion_id` | `int`    |             |
+
+### Returns
+
+_Nothing_
+
+## `/api/problemDiscussion/vote/`
+
+### Description
+
+Vote on a discussion (upvote or downvote)
+
+### Parameters
+
+| Name            | Type     | Description |
+| --------------- | -------- | ----------- |
+| `discussion_id` | `int`    |             |
+| `vote_type`     | `string` |             |
+
+### Returns
+
+| Name        | Type     |
+| ----------- | -------- |
+| `downvotes` | `number` |
+| `upvotes`   | `number` |
 
 # ProblemForfeited
 

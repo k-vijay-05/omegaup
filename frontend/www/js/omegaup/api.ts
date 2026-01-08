@@ -1470,6 +1470,67 @@ export const Problem = {
   }),
 };
 
+export const ProblemDiscussion = {
+  create: apiCall<
+    messages.ProblemDiscussionCreateRequest,
+    messages.ProblemDiscussionCreateResponse
+  >('/api/problemDiscussion/create/'),
+  createReply: apiCall<
+    messages.ProblemDiscussionCreateReplyRequest,
+    messages.ProblemDiscussionCreateReplyResponse
+  >('/api/problemDiscussion/createReply/'),
+  delete: apiCall<
+    messages.ProblemDiscussionDeleteRequest,
+    messages.ProblemDiscussionDeleteResponse
+  >('/api/problemDiscussion/delete/'),
+  getReplies: apiCall<
+    messages.ProblemDiscussionGetRepliesRequest,
+    messages._ProblemDiscussionGetRepliesServerResponse,
+    messages.ProblemDiscussionGetRepliesResponse
+  >('/api/problemDiscussion/getReplies/', (x) => {
+    x.replies = ((x) => {
+      if (!Array.isArray(x)) {
+        return x;
+      }
+      return x.map((x) => {
+        x.created_at = ((x: number) => new Date(x * 1000))(x.created_at);
+        x.updated_at = ((x: number) => new Date(x * 1000))(x.updated_at);
+        return x;
+      });
+    })(x.replies);
+    return x;
+  }),
+  list: apiCall<
+    messages.ProblemDiscussionListRequest,
+    messages._ProblemDiscussionListServerResponse,
+    messages.ProblemDiscussionListResponse
+  >('/api/problemDiscussion/list/', (x) => {
+    x.discussions = ((x) => {
+      if (!Array.isArray(x)) {
+        return x;
+      }
+      return x.map((x) => {
+        x.created_at = ((x: number) => new Date(x * 1000))(x.created_at);
+        x.updated_at = ((x: number) => new Date(x * 1000))(x.updated_at);
+        return x;
+      });
+    })(x.discussions);
+    return x;
+  }),
+  report: apiCall<
+    messages.ProblemDiscussionReportRequest,
+    messages.ProblemDiscussionReportResponse
+  >('/api/problemDiscussion/report/'),
+  update: apiCall<
+    messages.ProblemDiscussionUpdateRequest,
+    messages.ProblemDiscussionUpdateResponse
+  >('/api/problemDiscussion/update/'),
+  vote: apiCall<
+    messages.ProblemDiscussionVoteRequest,
+    messages.ProblemDiscussionVoteResponse
+  >('/api/problemDiscussion/vote/'),
+};
+
 export const ProblemForfeited = {
   getCounts: apiCall<
     messages.ProblemForfeitedGetCountsRequest,

@@ -1544,6 +1544,28 @@ export namespace types {
       );
     }
 
+    export function DiscussionListPayload(
+      elementId: string = 'payload',
+    ): types.DiscussionListPayload {
+      return ((x) => {
+        x.discussions = ((x) => {
+          if (!Array.isArray(x)) {
+            return x;
+          }
+          return x.map((x) => {
+            x.created_at = ((x: number) => new Date(x * 1000))(x.created_at);
+            x.updated_at = ((x: number) => new Date(x * 1000))(x.updated_at);
+            return x;
+          });
+        })(x.discussions);
+        return x;
+      })(
+        JSON.parse(
+          (document.getElementById(elementId) as HTMLElement).innerText,
+        ),
+      );
+    }
+
     export function EmailEditDetailsPayload(
       elementId: string = 'payload',
     ): types.EmailEditDetailsPayload {
@@ -2052,6 +2074,28 @@ export namespace types {
     ): types.ProblemsMineInfoPayload {
       return JSON.parse(
         (document.getElementById(elementId) as HTMLElement).innerText,
+      );
+    }
+
+    export function ReplyListPayload(
+      elementId: string = 'payload',
+    ): types.ReplyListPayload {
+      return ((x) => {
+        x.replies = ((x) => {
+          if (!Array.isArray(x)) {
+            return x;
+          }
+          return x.map((x) => {
+            x.created_at = ((x: number) => new Date(x * 1000))(x.created_at);
+            x.updated_at = ((x: number) => new Date(x * 1000))(x.updated_at);
+            return x;
+          });
+        })(x.replies);
+        return x;
+      })(
+        JSON.parse(
+          (document.getElementById(elementId) as HTMLElement).innerText,
+        ),
       );
     }
 
@@ -3651,6 +3695,27 @@ export namespace types {
     valid: boolean;
   }
 
+  export interface Discussion {
+    author_username: string;
+    content: string;
+    created_at: Date;
+    discussion_id: number;
+    downvotes: number;
+    identity_id: number;
+    problem_id: number;
+    reply_count: number;
+    updated_at: Date;
+    upvotes: number;
+    username: string;
+  }
+
+  export interface DiscussionListPayload {
+    discussions: types.Discussion[];
+    page: number;
+    page_size: number;
+    total: number;
+  }
+
   export interface EmailEditDetailsPayload {
     email?: string;
     profile?: types.UserProfileInfo;
@@ -4429,6 +4494,22 @@ export namespace types {
   export interface Progress {
     max_score: number;
     score: number;
+  }
+
+  export interface Reply {
+    author_username: string;
+    content: string;
+    created_at: Date;
+    discussion_id: number;
+    identity_id: number;
+    reply_id: number;
+    updated_at: Date;
+    username: string;
+  }
+
+  export interface ReplyListPayload {
+    replies: types.Reply[];
+    total: number;
   }
 
   export interface Run {
@@ -5708,6 +5789,29 @@ export namespace messages {
     published: string;
   };
 
+  // ProblemDiscussion
+  export type ProblemDiscussionCreateRequest = { [key: string]: any };
+  export type ProblemDiscussionCreateResponse = { discussion_id: number };
+  export type ProblemDiscussionCreateReplyRequest = { [key: string]: any };
+  export type ProblemDiscussionCreateReplyResponse = { reply_id: number };
+  export type ProblemDiscussionDeleteRequest = { [key: string]: any };
+  export type ProblemDiscussionDeleteResponse = {};
+  export type ProblemDiscussionGetRepliesRequest = { [key: string]: any };
+  export type _ProblemDiscussionGetRepliesServerResponse = any;
+  export type ProblemDiscussionGetRepliesResponse = types.ReplyListPayload;
+  export type ProblemDiscussionListRequest = { [key: string]: any };
+  export type _ProblemDiscussionListServerResponse = any;
+  export type ProblemDiscussionListResponse = types.DiscussionListPayload;
+  export type ProblemDiscussionReportRequest = { [key: string]: any };
+  export type ProblemDiscussionReportResponse = { report_id: number };
+  export type ProblemDiscussionUpdateRequest = { [key: string]: any };
+  export type ProblemDiscussionUpdateResponse = {};
+  export type ProblemDiscussionVoteRequest = { [key: string]: any };
+  export type ProblemDiscussionVoteResponse = {
+    downvotes: number;
+    upvotes: number;
+  };
+
   // ProblemForfeited
   export type ProblemForfeitedGetCountsRequest = { [key: string]: any };
   export type ProblemForfeitedGetCountsResponse = {
@@ -6601,6 +6705,33 @@ export namespace controllers {
     versions: (
       params?: messages.ProblemVersionsRequest,
     ) => Promise<messages.ProblemVersionsResponse>;
+  }
+
+  export interface ProblemDiscussion {
+    create: (
+      params?: messages.ProblemDiscussionCreateRequest,
+    ) => Promise<messages.ProblemDiscussionCreateResponse>;
+    createReply: (
+      params?: messages.ProblemDiscussionCreateReplyRequest,
+    ) => Promise<messages.ProblemDiscussionCreateReplyResponse>;
+    delete: (
+      params?: messages.ProblemDiscussionDeleteRequest,
+    ) => Promise<messages.ProblemDiscussionDeleteResponse>;
+    getReplies: (
+      params?: messages.ProblemDiscussionGetRepliesRequest,
+    ) => Promise<messages.ProblemDiscussionGetRepliesResponse>;
+    list: (
+      params?: messages.ProblemDiscussionListRequest,
+    ) => Promise<messages.ProblemDiscussionListResponse>;
+    report: (
+      params?: messages.ProblemDiscussionReportRequest,
+    ) => Promise<messages.ProblemDiscussionReportResponse>;
+    update: (
+      params?: messages.ProblemDiscussionUpdateRequest,
+    ) => Promise<messages.ProblemDiscussionUpdateResponse>;
+    vote: (
+      params?: messages.ProblemDiscussionVoteRequest,
+    ) => Promise<messages.ProblemDiscussionVoteResponse>;
   }
 
   export interface ProblemForfeited {
