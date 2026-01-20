@@ -299,9 +299,18 @@ export default class ProblemDiscussion extends Vue {
   }
 
   @Watch('activeThreadCommentId')
-  onActiveThreadCommentIdChanged(): void {
-    if (this.activeThreadCommentId !== null) {
-      this.loadReplies(this.activeThreadCommentId);
+  onActiveThreadCommentIdChanged(
+    newValue: number | null,
+    oldValue: number | null,
+  ): void {
+    // Destroy old editor when closing thread
+    if (oldValue !== null && this.replyMarkdownEditor) {
+      // Clean up the old editor if needed
+      this.replyMarkdownEditor = null;
+    }
+    // Initialize new editor when opening thread
+    if (newValue !== null) {
+      this.loadReplies(newValue);
       this.$nextTick(() => {
         this.initializeReplyMarkdownEditor();
       });
@@ -503,20 +512,28 @@ export default class ProblemDiscussion extends Vue {
   }
 
   initializeReplyMarkdownEditor(): void {
-    if (
-      this.replyMarkdownButtonBar &&
-      this.replyMarkdownInput &&
-      !this.replyMarkdownEditor
-    ) {
+    // Handle refs that might be arrays due to v-for
+    const buttonBar = Array.isArray(this.replyMarkdownButtonBar)
+      ? this.replyMarkdownButtonBar[0]
+      : this.replyMarkdownButtonBar;
+    const input = Array.isArray(this.replyMarkdownInput)
+      ? this.replyMarkdownInput[0]
+      : this.replyMarkdownInput;
+
+    if (buttonBar && input) {
+      // Destroy existing editor if it exists
+      if (this.replyMarkdownEditor) {
+        this.replyMarkdownEditor = null;
+      }
       const markdownConverter = new markdown.Converter({ preview: false });
       this.replyMarkdownEditor = new Markdown.Editor(
         markdownConverter.converter,
         '',
         {
           panels: {
-            buttonBar: this.replyMarkdownButtonBar,
+            buttonBar: buttonBar,
             preview: null,
-            input: this.replyMarkdownInput,
+            input: input,
           },
         },
       );
@@ -542,6 +559,18 @@ export default class ProblemDiscussion extends Vue {
         !this.commentMarkdownEditor
       ) {
         this.initializeMarkdownEditors();
+      }
+      // Re-initialize reply editor if thread is active but editor is not initialized
+      if (this.activeThreadCommentId !== null) {
+        const buttonBar = Array.isArray(this.replyMarkdownButtonBar)
+          ? this.replyMarkdownButtonBar[0]
+          : this.replyMarkdownButtonBar;
+        const input = Array.isArray(this.replyMarkdownInput)
+          ? this.replyMarkdownInput[0]
+          : this.replyMarkdownInput;
+        if (buttonBar && input && !this.replyMarkdownEditor) {
+          this.initializeReplyMarkdownEditor();
+        }
       }
     });
   }
