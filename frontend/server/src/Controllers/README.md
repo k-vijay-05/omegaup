@@ -183,7 +183,9 @@
   - [`/api/problemDiscussion/delete/`](#apiproblemdiscussiondelete)
   - [`/api/problemDiscussion/getReplies/`](#apiproblemdiscussiongetreplies)
   - [`/api/problemDiscussion/list/`](#apiproblemdiscussionlist)
+  - [`/api/problemDiscussion/listReports/`](#apiproblemdiscussionlistreports)
   - [`/api/problemDiscussion/report/`](#apiproblemdiscussionreport)
+  - [`/api/problemDiscussion/resolveReport/`](#apiproblemdiscussionresolvereport)
   - [`/api/problemDiscussion/update/`](#apiproblemdiscussionupdate)
   - [`/api/problemDiscussion/vote/`](#apiproblemdiscussionvote)
 - [ProblemForfeited](#problemforfeited)
@@ -3660,7 +3662,7 @@ Create a reply to a discussion
 
 ### Description
 
-Delete a discussion comment (only by owner)
+Delete a discussion comment (by owner, or by discussion reviewer/admin)
 
 ### Parameters
 
@@ -3712,6 +3714,28 @@ Get discussions for a problem
 types.DiscussionListPayload;
 ```
 
+## `/api/problemDiscussion/listReports/`
+
+### Description
+
+List all open reports (admin only)
+
+### Parameters
+
+| Name        | Type        | Description |
+| ----------- | ----------- | ----------- |
+| `page`      | `int\|null` |             |
+| `page_size` | `int\|null` |             |
+
+### Returns
+
+| Name        | Type                                                                                                                                                                                                            |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `page`      | `number`                                                                                                                                                                                                        |
+| `page_size` | `number`                                                                                                                                                                                                        |
+| `reports`   | `{ created_at: Date; discussion: { content: string; problem_id: number; }; discussion_id: number; identity_id: number; reason: string; report_id: number; reporter: { username: string; }; status: string; }[]` |
+| `total`     | `number`                                                                                                                                                                                                        |
+
 ## `/api/problemDiscussion/report/`
 
 ### Description
@@ -3730,6 +3754,23 @@ Report a discussion
 | Name        | Type     |
 | ----------- | -------- |
 | `report_id` | `number` |
+
+## `/api/problemDiscussion/resolveReport/`
+
+### Description
+
+Resolve a discussion report (admin only)
+
+### Parameters
+
+| Name        | Type     | Description |
+| ----------- | -------- | ----------- |
+| `report_id` | `int`    |             |
+| `status`    | `string` |             |
+
+### Returns
+
+_Nothing_
 
 ## `/api/problemDiscussion/update/`
 

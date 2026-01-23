@@ -3049,6 +3049,7 @@ export namespace types {
     gravatarURL51: string;
     inContest: boolean;
     isAdmin: boolean;
+    isDiscussionReviewer: boolean;
     isLoggedIn: boolean;
     isMainUserIdentity: boolean;
     isReviewer: boolean;
@@ -5802,8 +5803,27 @@ export namespace messages {
   export type ProblemDiscussionListRequest = { [key: string]: any };
   export type _ProblemDiscussionListServerResponse = any;
   export type ProblemDiscussionListResponse = types.DiscussionListPayload;
+  export type ProblemDiscussionListReportsRequest = { [key: string]: any };
+  export type _ProblemDiscussionListReportsServerResponse = any;
+  export type ProblemDiscussionListReportsResponse = {
+    page: number;
+    page_size: number;
+    reports: {
+      created_at: Date;
+      discussion: { content: string; problem_id: number };
+      discussion_id: number;
+      identity_id: number;
+      reason: string;
+      report_id: number;
+      reporter: { username: string };
+      status: string;
+    }[];
+    total: number;
+  };
   export type ProblemDiscussionReportRequest = { [key: string]: any };
   export type ProblemDiscussionReportResponse = { report_id: number };
+  export type ProblemDiscussionResolveReportRequest = { [key: string]: any };
+  export type ProblemDiscussionResolveReportResponse = {};
   export type ProblemDiscussionUpdateRequest = { [key: string]: any };
   export type ProblemDiscussionUpdateResponse = {};
   export type ProblemDiscussionVoteRequest = { [key: string]: any };
@@ -6723,9 +6743,15 @@ export namespace controllers {
     list: (
       params?: messages.ProblemDiscussionListRequest,
     ) => Promise<messages.ProblemDiscussionListResponse>;
+    listReports: (
+      params?: messages.ProblemDiscussionListReportsRequest,
+    ) => Promise<messages.ProblemDiscussionListReportsResponse>;
     report: (
       params?: messages.ProblemDiscussionReportRequest,
     ) => Promise<messages.ProblemDiscussionReportResponse>;
+    resolveReport: (
+      params?: messages.ProblemDiscussionResolveReportRequest,
+    ) => Promise<messages.ProblemDiscussionResolveReportResponse>;
     update: (
       params?: messages.ProblemDiscussionUpdateRequest,
     ) => Promise<messages.ProblemDiscussionUpdateResponse>;

@@ -676,6 +676,7 @@ CREATE TABLE `Problem_Discussion_Reports` (
   KEY `idx_discussion_id` (`discussion_id`),
   KEY `idx_identity_id` (`identity_id`),
   KEY `idx_status` (`status`),
+  KEY `idx_discussion_identity` (`discussion_id`,`identity_id`),
   CONSTRAINT `fk_pdre_discussion_id` FOREIGN KEY (`discussion_id`) REFERENCES `Problem_Discussions` (`discussion_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_pdre_identity_id` FOREIGN KEY (`identity_id`) REFERENCES `Identities` (`identity_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Reportes de comentarios inapropiados en discusiones';

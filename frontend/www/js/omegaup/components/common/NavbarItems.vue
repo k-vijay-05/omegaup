@@ -152,6 +152,12 @@
             <a v-if="isReviewer" class="dropdown-item" href="/nomination/">{{
               T.navQualityNominationQueue
             }}</a>
+            <a
+              v-if="isDiscussionReviewer"
+              class="dropdown-item"
+              href="/admin/discussion-reports/"
+              >{{ T.discussionReportsTitle || 'Discussion Reports' }}</a
+            >
           </slot>
         </div>
       </li>
@@ -241,6 +247,7 @@ export default class NavbarItems extends Vue {
   @Prop() inContest!: boolean;
   @Prop() isLoggedIn!: boolean;
   @Prop() isReviewer!: boolean;
+  @Prop() isDiscussionReviewer!: boolean;
   @Prop() isAdmin!: boolean;
   @Prop() isMainUserIdentity!: boolean;
   @Prop() navbarSection!: string;

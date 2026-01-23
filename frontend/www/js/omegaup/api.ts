@@ -1517,10 +1517,30 @@ export const ProblemDiscussion = {
     })(x.discussions);
     return x;
   }),
+  listReports: apiCall<
+    messages.ProblemDiscussionListReportsRequest,
+    messages._ProblemDiscussionListReportsServerResponse,
+    messages.ProblemDiscussionListReportsResponse
+  >('/api/problemDiscussion/listReports/', (x) => {
+    x.reports = ((x) => {
+      if (!Array.isArray(x)) {
+        return x;
+      }
+      return x.map((x) => {
+        x.created_at = ((x: number) => new Date(x * 1000))(x.created_at);
+        return x;
+      });
+    })(x.reports);
+    return x;
+  }),
   report: apiCall<
     messages.ProblemDiscussionReportRequest,
     messages.ProblemDiscussionReportResponse
   >('/api/problemDiscussion/report/'),
+  resolveReport: apiCall<
+    messages.ProblemDiscussionResolveReportRequest,
+    messages.ProblemDiscussionResolveReportResponse
+  >('/api/problemDiscussion/resolveReport/'),
   update: apiCall<
     messages.ProblemDiscussionUpdateRequest,
     messages.ProblemDiscussionUpdateResponse

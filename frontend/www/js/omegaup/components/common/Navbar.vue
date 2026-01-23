@@ -62,6 +62,7 @@
             :in-contest="inContest"
             :is-logged-in="isLoggedIn"
             :is-reviewer="isReviewer"
+            :is-discussion-reviewer="isDiscussionReviewer"
             :is-admin="isAdmin"
             :is-main-user-identity="isMainUserIdentity"
             :is-under13-user="isUnder13User"
@@ -371,6 +372,7 @@ export default class Navbar extends Vue {
   @Prop() inContest!: boolean;
   @Prop() isLoggedIn!: boolean;
   @Prop() isReviewer!: boolean;
+  @Prop() isDiscussionReviewer!: boolean;
   @Prop() gravatarURL51!: string;
   @Prop() gravatarURL128!: string;
   @Prop() associatedIdentities!: types.AssociatedIdentity[];

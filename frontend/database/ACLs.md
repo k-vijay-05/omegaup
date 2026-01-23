@@ -11,3 +11,4 @@ ID    | Descripción
 7     | `omegaup:group-identity-creator`. Los miembros de este grupo tienen privilegios para crear identidades a partir de un grupo.
 8     | `omegaup:certificate-generator`. Los miembros de este grupo tienen privilegios para generar diplomas.
 9     | `omegaup:teaching-assistant`. Usuario con privilegios para ver envíos, dar feedback y descalificar envíos en su curso asignado.
+10    | `omegaup:discussion-reviewer`. Los miembros de este grupo tienen privilegios para revisar reportes de discusiones.

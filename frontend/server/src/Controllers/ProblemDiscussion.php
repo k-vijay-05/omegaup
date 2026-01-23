@@ -162,7 +162,7 @@ class ProblemDiscussion extends \OmegaUp\Controllers\Controller {
     }
 
     /**
-     * Delete a discussion comment (only by owner)
+     * Delete a discussion comment (by owner, or by discussion reviewer/admin)
      *
      * @param \OmegaUp\Request $r
      * @return array{status: string}
@@ -182,8 +182,14 @@ class ProblemDiscussion extends \OmegaUp\Controllers\Controller {
             );
         }
 
-        // Check ownership
-        if ($discussion->identity_id !== $r->identity->identity_id) {
+        // Check ownership or admin privileges
+        $isOwner = $discussion->identity_id === $r->identity->identity_id;
+        $isDiscussionReviewer = \OmegaUp\Authorization::isDiscussionReviewer(
+            $r->identity
+        );
+        $isSystemAdmin = \OmegaUp\Authorization::isSystemAdmin($r->identity);
+
+        if (!$isOwner && !$isDiscussionReviewer && !$isSystemAdmin) {
             throw new \OmegaUp\Exceptions\ForbiddenAccessException(
                 'userNotAllowed'
             );
@@ -426,6 +432,152 @@ class ProblemDiscussion extends \OmegaUp\Controllers\Controller {
         return [
             'status' => 'ok',
             'report_id' => $report->report_id,
+        ];
+    }
+
+    /**
+     * List all open reports (admin only)
+     *
+     * @param \OmegaUp\Request $r
+     * @return array{reports: list<array{report_id: int, discussion_id: int, identity_id: int, reason: string, status: string, created_at: \OmegaUp\Timestamp, discussion: array{content: string, problem_id: int}, reporter: array{username: string}}>, total: int, page: int, page_size: int}
+     *
+     * @omegaup-request-param int|null $page
+     * @omegaup-request-param int|null $page_size
+     */
+    public static function apiListReports(\OmegaUp\Request $r): array {
+        \OmegaUp\Controllers\Controller::ensureNotInLockdown();
+        $r->ensureMainUserIdentity();
+        self::validateMemberOfDiscussionReviewerGroup($r->identity);
+
+        $page = $r->ensureOptionalInt('page') ?? 1;
+        $pageSize = $r->ensureOptionalInt('page_size') ?? 20;
+
+        // Get open reports
+        $result = \OmegaUp\DAO\ProblemDiscussionReports::getOpenReports(
+            $page,
+            $pageSize
+        );
+
+        // Enrich reports with discussion and reporter info
+        $enrichedReports = [];
+        foreach ($result['reports'] as $report) {
+            // Get discussion
+            $discussion = \OmegaUp\DAO\ProblemDiscussions::getByPK(
+                $report->discussion_id
+            );
+            if (is_null($discussion)) {
+                continue; // Skip if discussion was deleted
+            }
+
+            // Get reporter identity
+            $reporterIdentity = \OmegaUp\DAO\Identities::getByPK(
+                $report->identity_id
+            );
+
+            $enrichedReports[] = [
+                'report_id' => $report->report_id,
+                'discussion_id' => $report->discussion_id,
+                'identity_id' => $report->identity_id,
+                'reason' => $report->reason,
+                'status' => $report->status,
+                'created_at' => $report->created_at,
+                'discussion' => [
+                    'content' => $discussion->content,
+                    'problem_id' => $discussion->problem_id,
+                ],
+                'reporter' => [
+                    'username' => $reporterIdentity ? $reporterIdentity->username : '',
+                ],
+            ];
+        }
+
+        return [
+            'reports' => $enrichedReports,
+            'total' => $result['total'],
+            'page' => $page,
+            'page_size' => $pageSize,
+        ];
+    }
+
+    /**
+     * Resolve a discussion report (admin only)
+     *
+     * @param \OmegaUp\Request $r
+     * @return array{status: string}
+     *
+     * @omegaup-request-param int $report_id
+     * @omegaup-request-param string $status
+     */
+    public static function apiResolveReport(\OmegaUp\Request $r): array {
+        \OmegaUp\Controllers\Controller::ensureNotInLockdown();
+        $r->ensureMainUserIdentity();
+        self::validateMemberOfDiscussionReviewerGroup($r->identity);
+
+        $reportId = $r->ensureInt('report_id');
+        $status = $r->ensureEnum(
+            'status',
+            ['resolved', 'dismissed']
+        );
+
+        // Get report
+        $report = \OmegaUp\DAO\ProblemDiscussionReports::getByPK($reportId);
+        if (is_null($report)) {
+            throw new \OmegaUp\Exceptions\NotFoundException('reportNotFound');
+        }
+
+        // Check if report is already in the requested status
+        if ($report->status === $status) {
+            return ['status' => 'ok'];
+        }
+
+        // Update report status
+        $report->status = $status;
+        \OmegaUp\DAO\ProblemDiscussionReports::update($report);
+
+        return ['status' => 'ok'];
+    }
+
+    /**
+     * Validates that the user making the request is member of the
+     * `omegaup:discussion-reviewer` group.
+     *
+     * @param \OmegaUp\DAO\VO\Identities $identity
+     * @return void
+     * @throws \OmegaUp\Exceptions\ForbiddenAccessException
+     */
+    private static function validateMemberOfDiscussionReviewerGroup(
+        \OmegaUp\DAO\VO\Identities $identity
+    ): void {
+        if (
+            !\OmegaUp\Authorization::isSystemAdmin($identity) &&
+            !\OmegaUp\Authorization::isDiscussionReviewer($identity)
+        ) {
+            throw new \OmegaUp\Exceptions\ForbiddenAccessException(
+                'userNotAllowed'
+            );
+        }
+    }
+
+    /**
+     * Gets the details for the discussion reports admin page
+     *
+     * @param \OmegaUp\Request $r
+     * @return array{templateProperties: array{title: \OmegaUp\TranslationString, payload: array{}}, entrypoint: string}
+     */
+    public static function getDiscussionReportsDetailsForTypeScript(
+        \OmegaUp\Request $r
+    ): array {
+        $r->ensureMainUserIdentity();
+        self::validateMemberOfDiscussionReviewerGroup($r->identity);
+
+        return [
+            'templateProperties' => [
+                'title' => new \OmegaUp\TranslationString(
+                    'omegaupTitleDiscussionReports'
+                ),
+                'payload' => [],
+            ],
+            'entrypoint' => 'admin_discussion_reports',
         ];
     }
 }

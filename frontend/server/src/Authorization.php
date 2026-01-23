@@ -55,6 +55,12 @@ class Authorization {
      */
     private static $_teachingAssistantGroup = null;
 
+    /**
+     * Cache for system group for discussion reviewers.
+     * @var null|\OmegaUp\DAO\VO\Groups
+     */
+    private static $_discussionReviewerGroup = null;
+
     // Administrator for an ACL.
     const ADMIN_ROLE = 1;
 
@@ -79,6 +85,9 @@ class Authorization {
     // Teaching assitant.
     const TEACHING_ASSISTANT_ROLE = 9;
 
+    // Discussion reviewer.
+    const DISCUSSION_REVIEWER_ROLE = 10;
+
     // System-level ACL.
     const SYSTEM_ACL = 1;
 
@@ -102,6 +111,9 @@ class Authorization {
 
     // Group for teaching assitants.
     const TEACHING_ASSISTANT_GROUP_ALIAS = 'omegaup:teaching-assistant';
+
+    // Group for discussion reviewers.
+    const DISCUSSION_REVIEWER_GROUP_ALIAS = 'omegaup:discussion-reviewer';
 
     public static function canViewSubmission(
         \OmegaUp\DAO\VO\Identities $identity,
@@ -624,6 +636,28 @@ class Authorization {
         );
     }
 
+    public static function isDiscussionReviewer(\OmegaUp\DAO\VO\Identities $identity): bool {
+        if (is_null(self::$_discussionReviewerGroup)) {
+            self::$_discussionReviewerGroup = \OmegaUp\DAO\Groups::findByAlias(
+                self::DISCUSSION_REVIEWER_GROUP_ALIAS
+            );
+            if (is_null(self::$_discussionReviewerGroup)) {
+                return false;
+            }
+        }
+        if (is_null(self::$_discussionReviewerGroup->acl_id)) {
+            return false;
+        }
+        return self::isGroupMember(
+            $identity,
+            self::$_discussionReviewerGroup
+        ) || self::hasRole(
+            $identity,
+            self::$_discussionReviewerGroup->acl_id,
+            self::DISCUSSION_REVIEWER_ROLE
+        );
+    }
+
     public static function clearCacheForTesting(): void {
         self::$_isSystemAdmin = null;
         self::$_qualityReviewerGroup = null;
@@ -632,6 +666,7 @@ class Authorization {
         self::$_groupIdentityCreator = null;
         self::$_certificateGeneratorGroup = null;
         self::$_teachingAssistantGroup = null;
+        self::$_discussionReviewerGroup = null;
     }
 
     public static function canSubmitToProblemset(

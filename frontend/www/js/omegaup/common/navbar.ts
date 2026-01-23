@@ -36,6 +36,7 @@ OmegaUp.on('ready', () => {
           inContest: payload.inContest,
           isLoggedIn: payload.isLoggedIn,
           isReviewer: payload.isReviewer,
+          isDiscussionReviewer: payload.isDiscussionReviewer,
           gravatarURL51: payload.gravatarURL51,
           gravatarURL128: payload.gravatarURL128,
           associatedIdentities: payload.associatedIdentities,
