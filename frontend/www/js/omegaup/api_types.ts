@@ -5826,6 +5826,8 @@ export namespace messages {
   export type ProblemDiscussionResolveReportResponse = {};
   export type ProblemDiscussionUpdateRequest = { [key: string]: any };
   export type ProblemDiscussionUpdateResponse = {};
+  export type ProblemDiscussionUpdateReplyRequest = { [key: string]: any };
+  export type ProblemDiscussionUpdateReplyResponse = {};
   export type ProblemDiscussionVoteRequest = { [key: string]: any };
   export type ProblemDiscussionVoteResponse = {
     downvotes: number;
@@ -6755,6 +6757,9 @@ export namespace controllers {
     update: (
       params?: messages.ProblemDiscussionUpdateRequest,
     ) => Promise<messages.ProblemDiscussionUpdateResponse>;
+    updateReply: (
+      params?: messages.ProblemDiscussionUpdateReplyRequest,
+    ) => Promise<messages.ProblemDiscussionUpdateReplyResponse>;
     vote: (
       params?: messages.ProblemDiscussionVoteRequest,
     ) => Promise<messages.ProblemDiscussionVoteResponse>;

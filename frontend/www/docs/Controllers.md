@@ -193,6 +193,7 @@ For more information about the API controllers, please refer to the [Controllers
   - [`/api/problemDiscussion/report/`](https://github.com/omegaup/omegaup/blob/main/frontend/server/src/Controllers/README.md#apiproblemdiscussionreport)
   - [`/api/problemDiscussion/resolveReport/`](https://github.com/omegaup/omegaup/blob/main/frontend/server/src/Controllers/README.md#apiproblemdiscussionresolvereport)
   - [`/api/problemDiscussion/update/`](https://github.com/omegaup/omegaup/blob/main/frontend/server/src/Controllers/README.md#apiproblemdiscussionupdate)
+  - [`/api/problemDiscussion/updateReply/`](https://github.com/omegaup/omegaup/blob/main/frontend/server/src/Controllers/README.md#apiproblemdiscussionupdatereply)
   - [`/api/problemDiscussion/vote/`](https://github.com/omegaup/omegaup/blob/main/frontend/server/src/Controllers/README.md#apiproblemdiscussionvote)
 - [ProblemForfeited](https://github.com/omegaup/omegaup/blob/main/frontend/server/src/Controllers/README.md#problemforfeited)
   - [`/api/problemForfeited/getCounts/`](https://github.com/omegaup/omegaup/blob/main/frontend/server/src/Controllers/README.md#apiproblemforfeitedgetcounts)

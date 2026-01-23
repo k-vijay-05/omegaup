@@ -390,12 +390,17 @@
           :discussion-replies="discussionReplies"
           :total-discussions="totalDiscussions"
           :is-loading-discussions="isLoadingDiscussions"
+          :current-username="currentUsername"
           @load-discussions="$emit('load-discussions', $event)"
           @post-comment="$emit('post-comment', $event)"
           @vote="$emit('vote', $event)"
           @load-replies="$emit('load-replies', $event)"
           @post-reply="$emit('post-reply', $event)"
           @report="$emit('report', $event)"
+          @delete-discussion="$emit('delete-discussion', $event)"
+          @delete-reply="$emit('delete-reply', $event)"
+          @update-discussion="$emit('update-discussion', $event)"
+          @update-reply="$emit('update-reply', $event)"
         ></omegaup-problem-discussion>
       </div>
     </div>
@@ -535,6 +540,7 @@ export default class ProblemDetails extends Vue {
   };
   @Prop({ default: 0 }) totalDiscussions!: number;
   @Prop({ default: false }) isLoadingDiscussions!: boolean;
+  @Prop({ default: '' }) currentUsername!: string;
 
   @Ref('statement-markdown')
   readonly statementMarkdown!: omegaup_problemMarkdown;

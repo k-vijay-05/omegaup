@@ -34,6 +34,7 @@ abstract class ProblemDiscussions {
             SET
                 `problem_id` = ?,
                 `identity_id` = ?,
+                `is_anonymous` = ?,
                 `content` = ?,
                 `upvotes` = ?,
                 `downvotes` = ?,
@@ -54,6 +55,7 @@ abstract class ProblemDiscussions {
                 null :
                 intval($Problem_Discussions->identity_id)
             ),
+            intval($Problem_Discussions->is_anonymous),
             $Problem_Discussions->content,
             intval($Problem_Discussions->upvotes),
             intval($Problem_Discussions->downvotes),
@@ -87,6 +89,7 @@ abstract class ProblemDiscussions {
                 `Problem_Discussions`.`discussion_id`,
                 `Problem_Discussions`.`problem_id`,
                 `Problem_Discussions`.`identity_id`,
+                `Problem_Discussions`.`is_anonymous`,
                 `Problem_Discussions`.`content`,
                 `Problem_Discussions`.`upvotes`,
                 `Problem_Discussions`.`downvotes`,
@@ -235,6 +238,7 @@ abstract class ProblemDiscussions {
                 `Problem_Discussions`.`discussion_id`,
                 `Problem_Discussions`.`problem_id`,
                 `Problem_Discussions`.`identity_id`,
+                `Problem_Discussions`.`is_anonymous`,
                 `Problem_Discussions`.`content`,
                 `Problem_Discussions`.`upvotes`,
                 `Problem_Discussions`.`downvotes`,
@@ -286,12 +290,14 @@ abstract class ProblemDiscussions {
                 `Problem_Discussions` (
                     `problem_id`,
                     `identity_id`,
+                    `is_anonymous`,
                     `content`,
                     `upvotes`,
                     `downvotes`,
                     `created_at`,
                     `updated_at`
                 ) VALUES (
+                    ?,
                     ?,
                     ?,
                     ?,
@@ -311,6 +317,7 @@ abstract class ProblemDiscussions {
                 null :
                 intval($Problem_Discussions->identity_id)
             ),
+            intval($Problem_Discussions->is_anonymous),
             $Problem_Discussions->content,
             intval($Problem_Discussions->upvotes),
             intval($Problem_Discussions->downvotes),

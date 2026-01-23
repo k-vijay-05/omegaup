@@ -134,6 +134,7 @@ OmegaUp.on('ready', async () => {
           discussionReplies: this.discussionReplies,
           totalDiscussions: this.totalDiscussions,
           isLoadingDiscussions: this.isLoadingDiscussions,
+          currentUsername: commonPayload.currentUsername,
         },
         on: {
           'show-run': (request: SubmissionRequest) => {
@@ -580,13 +581,133 @@ OmegaUp.on('ready', async () => {
             if (!request) return;
             api.ProblemDiscussion.report(request)
               .then(() => {
-                ui.success(
-                  T.reportSubmitted || 'Report submitted successfully',
-                );
+                // Success message is already shown in the popup component
               })
               .catch(() => {
                 ui.error(T.errorReporting || 'Error submitting report');
               });
+          },
+          'delete-discussion': (request: { discussion_id: number }) => {
+            api.ProblemDiscussion.delete({
+              discussion_id: request.discussion_id,
+            })
+              .then(() => {
+                ui.success(
+                  T.discussionDeleted || 'Discussion deleted successfully',
+                );
+                // Reload discussions
+                api.ProblemDiscussion.list({
+                  problem_alias: payload.problem.alias,
+                  page: 1,
+                  page_size: 10,
+                  sort_by: 'created_at',
+                  order: 'DESC',
+                })
+                  .then((response: any) => {
+                    this.discussions = response.discussions;
+                    this.totalDiscussions = response.total;
+                  })
+                  .catch(() => {
+                    ui.error(
+                      T.errorLoadingDiscussions || 'Error loading discussions',
+                    );
+                  });
+              })
+              .catch(ui.apiError);
+          },
+          'delete-reply': (request: {
+            discussion_id: number;
+            reply_id: number;
+          }) => {
+            api.ProblemDiscussion.delete({
+              discussion_id: request.discussion_id,
+              reply_id: request.reply_id,
+            })
+              .then(() => {
+                ui.success(T.replyDeleted || 'Reply deleted successfully');
+                // Reload replies for this discussion
+                api.ProblemDiscussion.getReplies({
+                  discussion_id: request.discussion_id,
+                })
+                  .then((response: any) => {
+                    this.$set(
+                      this.discussionReplies,
+                      request.discussion_id,
+                      response.replies,
+                    );
+                    // Update reply count in discussions
+                    const discussion = this.discussions.find(
+                      (d: any) => d.discussion_id === request.discussion_id,
+                    );
+                    if (discussion) {
+                      discussion.reply_count = response.replies.length;
+                    }
+                  })
+                  .catch(() => {
+                    ui.error(T.errorLoadingReplies || 'Error loading replies');
+                  });
+              })
+              .catch(ui.apiError);
+          },
+          'update-discussion': (request: {
+            discussion_id: number;
+            content: string;
+          }) => {
+            api.ProblemDiscussion.update({
+              discussion_id: request.discussion_id,
+              content: request.content,
+            })
+              .then(() => {
+                ui.success(
+                  T.discussionUpdated || 'Discussion updated successfully',
+                );
+                // Reload discussions
+                api.ProblemDiscussion.list({
+                  problem_alias: payload.problem.alias,
+                  page: 1,
+                  page_size: 10,
+                  sort_by: 'created_at',
+                  order: 'DESC',
+                })
+                  .then((response: any) => {
+                    this.discussions = response.discussions;
+                    this.totalDiscussions = response.total;
+                  })
+                  .catch(() => {
+                    ui.error(
+                      T.errorLoadingDiscussions || 'Error loading discussions',
+                    );
+                  });
+              })
+              .catch(ui.apiError);
+          },
+          'update-reply': (request: {
+            discussion_id: number;
+            reply_id: number;
+            content: string;
+          }) => {
+            api.ProblemDiscussion.updateReply({
+              reply_id: request.reply_id,
+              content: request.content,
+            })
+              .then(() => {
+                ui.success(T.replyUpdated || 'Reply updated successfully');
+                // Reload replies for this discussion
+                api.ProblemDiscussion.getReplies({
+                  discussion_id: request.discussion_id,
+                })
+                  .then((response: any) => {
+                    this.$set(
+                      this.discussionReplies,
+                      request.discussion_id,
+                      response.replies,
+                    );
+                  })
+                  .catch(() => {
+                    ui.error(T.errorLoadingReplies || 'Error loading replies');
+                  });
+              })
+              .catch(ui.apiError);
           },
         },
       });

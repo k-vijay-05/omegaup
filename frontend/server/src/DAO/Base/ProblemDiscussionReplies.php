@@ -34,6 +34,7 @@ abstract class ProblemDiscussionReplies {
             SET
                 `discussion_id` = ?,
                 `identity_id` = ?,
+                `is_anonymous` = ?,
                 `content` = ?,
                 `created_at` = ?,
                 `updated_at` = ?
@@ -52,6 +53,7 @@ abstract class ProblemDiscussionReplies {
                 null :
                 intval($Problem_Discussion_Replies->identity_id)
             ),
+            intval($Problem_Discussion_Replies->is_anonymous),
             $Problem_Discussion_Replies->content,
             \OmegaUp\DAO\DAO::toMySQLTimestamp(
                 $Problem_Discussion_Replies->created_at
@@ -83,6 +85,7 @@ abstract class ProblemDiscussionReplies {
                 `Problem_Discussion_Replies`.`reply_id`,
                 `Problem_Discussion_Replies`.`discussion_id`,
                 `Problem_Discussion_Replies`.`identity_id`,
+                `Problem_Discussion_Replies`.`is_anonymous`,
                 `Problem_Discussion_Replies`.`content`,
                 `Problem_Discussion_Replies`.`created_at`,
                 `Problem_Discussion_Replies`.`updated_at`
@@ -229,6 +232,7 @@ abstract class ProblemDiscussionReplies {
                 `Problem_Discussion_Replies`.`reply_id`,
                 `Problem_Discussion_Replies`.`discussion_id`,
                 `Problem_Discussion_Replies`.`identity_id`,
+                `Problem_Discussion_Replies`.`is_anonymous`,
                 `Problem_Discussion_Replies`.`content`,
                 `Problem_Discussion_Replies`.`created_at`,
                 `Problem_Discussion_Replies`.`updated_at`
@@ -278,10 +282,12 @@ abstract class ProblemDiscussionReplies {
                 `Problem_Discussion_Replies` (
                     `discussion_id`,
                     `identity_id`,
+                    `is_anonymous`,
                     `content`,
                     `created_at`,
                     `updated_at`
                 ) VALUES (
+                    ?,
                     ?,
                     ?,
                     ?,
@@ -299,6 +305,7 @@ abstract class ProblemDiscussionReplies {
                 null :
                 intval($Problem_Discussion_Replies->identity_id)
             ),
+            intval($Problem_Discussion_Replies->is_anonymous),
             $Problem_Discussion_Replies->content,
             \OmegaUp\DAO\DAO::toMySQLTimestamp(
                 $Problem_Discussion_Replies->created_at

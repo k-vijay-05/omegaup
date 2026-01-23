@@ -51,10 +51,40 @@
                 }}</small>
               </div>
             </div>
-            <div class="mb-3">
+            <div
+              v-if="editingDiscussionId !== discussion.discussion_id"
+              class="mb-3"
+            >
               <omegaup-markdown
                 :markdown="discussion.content"
               ></omegaup-markdown>
+            </div>
+            <div v-else class="mb-3">
+              <div
+                ref="editDiscussionMarkdownButtonBar"
+                class="wmd-button-bar"
+              ></div>
+              <textarea
+                ref="editDiscussionMarkdownInput"
+                v-model="editDiscussionText"
+                class="wmd-input discussion-textarea"
+                rows="4"
+              ></textarea>
+              <div class="d-flex justify-content-end mt-2">
+                <button
+                  class="btn btn-sm btn-secondary mr-2"
+                  @click="cancelEditDiscussion"
+                >
+                  {{ T.wordsCancel || 'Cancel' }}
+                </button>
+                <button
+                  class="btn btn-sm btn-primary"
+                  :disabled="!editDiscussionText.trim()"
+                  @click="saveEditDiscussion(discussion.discussion_id)"
+                >
+                  {{ T.wordsSave || 'Save' }}
+                </button>
+              </div>
             </div>
             <div class="d-flex align-items-center actions-row">
               <button
@@ -81,7 +111,30 @@
                 />
                 {{ discussion.reply_count }}
               </button>
+              <template v-if="discussion.username === currentUsername">
+                <button
+                  v-if="editingDiscussionId !== discussion.discussion_id"
+                  class="btn btn-sm btn-outline-primary mr-2"
+                  @click="
+                    startEditDiscussion(
+                      discussion.discussion_id,
+                      discussion.content,
+                    )
+                  "
+                >
+                  <font-awesome-icon :icon="['fas', 'edit']" class="mr-1" />
+                  {{ T.wordsEdit || 'Edit' }}
+                </button>
+                <button
+                  class="btn btn-sm btn-outline-danger"
+                  @click="onDeleteDiscussion(discussion.discussion_id)"
+                >
+                  <font-awesome-icon :icon="['fas', 'trash']" class="mr-1" />
+                  {{ T.wordsDelete || 'Delete' }}
+                </button>
+              </template>
               <button
+                v-else
                 class="btn btn-sm btn-outline-danger"
                 @click="onReport(discussion.discussion_id)"
               >
@@ -114,11 +167,74 @@
                       formatDate(reply.created_at)
                     }}</small>
                   </div>
-                  <omegaup-markdown
-                    :markdown="reply.content"
-                  ></omegaup-markdown>
+                  <div v-if="editingReplyId !== reply.reply_id">
+                    <omegaup-markdown
+                      :markdown="reply.content"
+                    ></omegaup-markdown>
+                  </div>
+                  <div v-else>
+                    <div
+                      ref="editReplyMarkdownButtonBar"
+                      class="wmd-button-bar"
+                    ></div>
+                    <textarea
+                      ref="editReplyMarkdownInput"
+                      v-model="editReplyText"
+                      class="wmd-input discussion-textarea"
+                      rows="3"
+                    ></textarea>
+                    <div class="d-flex justify-content-end mt-2">
+                      <button
+                        class="btn btn-sm btn-secondary mr-2"
+                        @click="cancelEditReply"
+                      >
+                        {{ T.wordsCancel || 'Cancel' }}
+                      </button>
+                      <button
+                        class="btn btn-sm btn-primary"
+                        :disabled="!editReplyText.trim()"
+                        @click="
+                          saveEditReply(
+                            discussion.discussion_id,
+                            reply.reply_id,
+                          )
+                        "
+                      >
+                        {{ T.wordsSave || 'Save' }}
+                      </button>
+                    </div>
+                  </div>
                   <div class="mt-2">
+                    <template v-if="reply.username === currentUsername">
+                      <button
+                        v-if="editingReplyId !== reply.reply_id"
+                        class="btn btn-sm btn-outline-primary mr-2"
+                        @click="startEditReply(reply.reply_id, reply.content)"
+                      >
+                        <font-awesome-icon
+                          :icon="['fas', 'edit']"
+                          class="mr-1"
+                        />
+                        {{ T.wordsEdit || 'Edit' }}
+                      </button>
+                      <button
+                        class="btn btn-sm btn-outline-danger"
+                        @click="
+                          onDeleteReply(
+                            discussion.discussion_id,
+                            reply.reply_id,
+                          )
+                        "
+                      >
+                        <font-awesome-icon
+                          :icon="['fas', 'trash']"
+                          class="mr-1"
+                        />
+                        {{ T.wordsDelete || 'Delete' }}
+                      </button>
+                    </template>
                     <button
+                      v-else
                       class="btn btn-sm btn-outline-danger"
                       @click="
                         onReportReply(discussion.discussion_id, reply.reply_id)
@@ -235,6 +351,33 @@
         </div>
       </div>
     </div>
+
+    <omegaup-overlay
+      :show-overlay="showReportPopup"
+      @hide-overlay="showReportPopup = false"
+    >
+      <template #popup>
+        <omegaup-discussion-report-popup
+          v-show="showReportPopup"
+          @dismiss="showReportPopup = false"
+          @submit="onReportSubmit"
+        ></omegaup-discussion-report-popup>
+      </template>
+    </omegaup-overlay>
+
+    <b-modal
+      v-model="showDeleteConfirmationModal"
+      :title="deleteConfirmationTitle"
+      :ok-title="T.wordsYes || 'Yes'"
+      :cancel-title="T.wordsNo || 'No'"
+      ok-variant="danger"
+      cancel-variant="secondary"
+      static
+      lazy
+      @ok="confirmDelete"
+    >
+      <p>{{ deleteConfirmationMessage }}</p>
+    </b-modal>
   </div>
 </template>
 
@@ -252,16 +395,26 @@ import {
   faArrowDown,
   faCommentAlt,
   faFlag,
+  faTrash,
+  faEdit,
   faChevronLeft,
   faChevronRight,
 } from '@fortawesome/free-solid-svg-icons';
 import omegaup_problemMarkdown from './Markdown.vue';
+import omegaup_DiscussionReportPopup from './DiscussionReportPopup.vue';
+import omegaup_Overlay from '../Overlay.vue';
+
+import 'bootstrap-vue/dist/bootstrap-vue.css';
+import { ModalPlugin } from 'bootstrap-vue';
+Vue.use(ModalPlugin);
 
 library.add(
   faArrowUp,
   faArrowDown,
   faCommentAlt,
   faFlag,
+  faTrash,
+  faEdit,
   faChevronLeft,
   faChevronRight,
 );
@@ -270,6 +423,8 @@ library.add(
   components: {
     FontAwesomeIcon,
     'omegaup-markdown': omegaup_problemMarkdown,
+    'omegaup-discussion-report-popup': omegaup_DiscussionReportPopup,
+    'omegaup-overlay': omegaup_Overlay,
   },
 })
 export default class ProblemDiscussion extends Vue {
@@ -280,6 +435,7 @@ export default class ProblemDiscussion extends Vue {
   };
   @Prop({ default: 0 }) totalDiscussions!: number;
   @Prop({ default: false }) isLoadingDiscussions!: boolean;
+  @Prop({ default: '' }) currentUsername!: string;
 
   // Local UI state
   newCommentText = '';
@@ -288,15 +444,31 @@ export default class ProblemDiscussion extends Vue {
   threadReplyText = '';
   currentPage = 1;
   pageSize = 10;
+  editingDiscussionId: number | null = null;
+  editingReplyId: number | null = null;
+  editDiscussionText = '';
+  editReplyText = '';
+  showReportPopup = false;
+  reportingDiscussionId: number | null = null;
+  reportingReplyId: number | null = null;
+  showDeleteConfirmationModal = false;
+  deletingDiscussionId: number | null = null;
+  deletingReplyId: number | null = null;
 
   // Markdown editors
   commentMarkdownEditor: Markdown.Editor | null = null;
   replyMarkdownEditor: Markdown.Editor | null = null;
+  editDiscussionMarkdownEditor: Markdown.Editor | null = null;
+  editReplyMarkdownEditor: Markdown.Editor | null = null;
 
   @Ref() readonly commentMarkdownButtonBar!: HTMLDivElement;
   @Ref() readonly commentMarkdownInput!: HTMLTextAreaElement;
   @Ref() readonly replyMarkdownButtonBar!: HTMLDivElement;
   @Ref() readonly replyMarkdownInput!: HTMLTextAreaElement;
+  @Ref() readonly editDiscussionMarkdownButtonBar!: HTMLDivElement;
+  @Ref() readonly editDiscussionMarkdownInput!: HTMLTextAreaElement;
+  @Ref() readonly editReplyMarkdownButtonBar!: HTMLDivElement;
+  @Ref() readonly editReplyMarkdownInput!: HTMLTextAreaElement;
 
   T = T;
   time = time;
@@ -405,37 +577,144 @@ export default class ProblemDiscussion extends Vue {
     };
   }
 
-  @Emit('report')
-  onReport(
-    discussionId: number,
-  ): { discussion_id: number; reason: string } | null {
-    const reason = window.prompt(
-      T.reportReason || 'Please provide a reason for reporting:',
-    );
+  onReport(discussionId: number): void {
+    this.reportingDiscussionId = discussionId;
+    this.reportingReplyId = null;
+    this.showReportPopup = true;
+  }
+
+  onReportReply(discussionId: number, replyId: number): void {
+    this.reportingDiscussionId = discussionId;
+    this.reportingReplyId = replyId;
+    this.showReportPopup = true;
+  }
+
+  onReportSubmit(reason: string): void {
     if (!reason || !reason.trim()) {
+      return;
+    }
+    if (this.reportingDiscussionId === null) {
+      return;
+    }
+    if (this.reportingReplyId !== null) {
+      // Report a reply
+      this.$emit('report', {
+        discussion_id: this.reportingDiscussionId,
+        reply_id: this.reportingReplyId,
+        reason: reason.trim(),
+      });
+    } else {
+      // Report a discussion
+      this.$emit('report', {
+        discussion_id: this.reportingDiscussionId,
+        reason: reason.trim(),
+      });
+    }
+    // Reset state
+    this.reportingDiscussionId = null;
+    this.reportingReplyId = null;
+  }
+
+  onDeleteDiscussion(discussionId: number): void {
+    this.deletingDiscussionId = discussionId;
+    this.deletingReplyId = null;
+    this.showDeleteConfirmationModal = true;
+  }
+
+  onDeleteReply(discussionId: number, replyId: number): void {
+    this.deletingDiscussionId = discussionId;
+    this.deletingReplyId = replyId;
+    this.showDeleteConfirmationModal = true;
+  }
+
+  confirmDelete(): void {
+    if (this.deletingReplyId !== null && this.deletingDiscussionId !== null) {
+      // Delete a reply
+      this.$emit('delete-reply', {
+        discussion_id: this.deletingDiscussionId,
+        reply_id: this.deletingReplyId,
+      });
+    } else if (this.deletingDiscussionId !== null) {
+      // Delete a discussion
+      this.$emit('delete-discussion', {
+        discussion_id: this.deletingDiscussionId,
+      });
+    }
+    // Reset state
+    this.deletingDiscussionId = null;
+    this.deletingReplyId = null;
+  }
+
+  get deleteConfirmationTitle(): string {
+    return this.deletingReplyId !== null
+      ? T.wordsDeleteReply || 'Delete Reply?'
+      : T.wordsDeleteDiscussion || 'Delete Discussion?';
+  }
+
+  get deleteConfirmationMessage(): string {
+    return this.deletingReplyId !== null
+      ? T.replyDeleteConfirm || 'Are you sure you want to delete this reply?'
+      : T.discussionDeleteConfirm ||
+          'Are you sure you want to delete this discussion?';
+  }
+
+  startEditDiscussion(discussionId: number, content: string): void {
+    this.editingDiscussionId = discussionId;
+    this.editDiscussionText = content;
+    this.$nextTick(() => {
+      this.initializeEditDiscussionMarkdownEditor();
+    });
+  }
+
+  cancelEditDiscussion(): void {
+    this.editingDiscussionId = null;
+    this.editDiscussionText = '';
+  }
+
+  @Emit('update-discussion')
+  saveEditDiscussion(
+    discussionId: number,
+  ): { discussion_id: number; content: string } | null {
+    if (!this.editDiscussionText.trim()) {
       return null;
     }
+    const content = this.editDiscussionText.trim();
+    this.editingDiscussionId = null;
+    this.editDiscussionText = '';
     return {
       discussion_id: discussionId,
-      reason: reason.trim(),
+      content,
     };
   }
 
-  @Emit('report')
-  onReportReply(
+  startEditReply(replyId: number, content: string): void {
+    this.editingReplyId = replyId;
+    this.editReplyText = content;
+    this.$nextTick(() => {
+      this.initializeEditReplyMarkdownEditor();
+    });
+  }
+
+  cancelEditReply(): void {
+    this.editingReplyId = null;
+    this.editReplyText = '';
+  }
+
+  @Emit('update-reply')
+  saveEditReply(
     discussionId: number,
     replyId: number,
-  ): { discussion_id: number; reply_id: number; reason: string } | null {
-    const reason = window.prompt(
-      T.reportReason || 'Please provide a reason for reporting:',
-    );
-    if (!reason || !reason.trim()) {
+  ): { discussion_id: number; reply_id: number; content: string } | null {
+    if (!this.editReplyText.trim()) {
       return null;
     }
+    const content = this.editReplyText.trim();
+    this.editingReplyId = null;
+    this.editReplyText = '';
     return {
       discussion_id: discussionId,
       reply_id: replyId,
-      reason: reason.trim(),
+      content,
     };
   }
 
@@ -570,6 +849,78 @@ export default class ProblemDiscussion extends Vue {
     }
   }
 
+  initializeEditDiscussionMarkdownEditor(): void {
+    if (this.editingDiscussionId === null) {
+      return;
+    }
+
+    // Since only one discussion can be edited at a time, and refs are only created
+    // for the element in edit mode (v-else), the refs array will only contain
+    // one element at index 0, regardless of which discussion is being edited.
+    const buttonBar = Array.isArray(this.editDiscussionMarkdownButtonBar)
+      ? this.editDiscussionMarkdownButtonBar[0]
+      : this.editDiscussionMarkdownButtonBar;
+    const input = Array.isArray(this.editDiscussionMarkdownInput)
+      ? this.editDiscussionMarkdownInput[0]
+      : this.editDiscussionMarkdownInput;
+
+    if (buttonBar && input) {
+      // Destroy existing editor if it exists
+      if (this.editDiscussionMarkdownEditor) {
+        this.editDiscussionMarkdownEditor = null;
+      }
+      const markdownConverter = new markdown.Converter({ preview: false });
+      this.editDiscussionMarkdownEditor = new Markdown.Editor(
+        markdownConverter.converter,
+        '',
+        {
+          panels: {
+            buttonBar: buttonBar,
+            preview: null,
+            input: input,
+          },
+        },
+      );
+      this.editDiscussionMarkdownEditor.run();
+    }
+  }
+
+  initializeEditReplyMarkdownEditor(): void {
+    if (this.editingReplyId === null) {
+      return;
+    }
+
+    // Since only one reply can be edited at a time, and refs are only created
+    // for the element in edit mode (v-else), the refs array will only contain
+    // one element at index 0, regardless of which reply is being edited.
+    const buttonBar = Array.isArray(this.editReplyMarkdownButtonBar)
+      ? this.editReplyMarkdownButtonBar[0]
+      : this.editReplyMarkdownButtonBar;
+    const input = Array.isArray(this.editReplyMarkdownInput)
+      ? this.editReplyMarkdownInput[0]
+      : this.editReplyMarkdownInput;
+
+    if (buttonBar && input) {
+      // Destroy existing editor if it exists
+      if (this.editReplyMarkdownEditor) {
+        this.editReplyMarkdownEditor = null;
+      }
+      const markdownConverter = new markdown.Converter({ preview: false });
+      this.editReplyMarkdownEditor = new Markdown.Editor(
+        markdownConverter.converter,
+        '',
+        {
+          panels: {
+            buttonBar: buttonBar,
+            preview: null,
+            input: input,
+          },
+        },
+      );
+      this.editReplyMarkdownEditor.run();
+    }
+  }
+
   mounted(): void {
     if (this.problemAlias) {
       this.loadDiscussions();
@@ -686,7 +1037,8 @@ export default class ProblemDiscussion extends Vue {
 }
 
 .discussion-form,
-.discussion-thread {
+.discussion-thread,
+.discussion-posts {
   .wmd-button-bar {
     width: 100%;
     background-color: #f8f9fa;

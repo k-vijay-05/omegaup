@@ -1545,6 +1545,10 @@ export const ProblemDiscussion = {
     messages.ProblemDiscussionUpdateRequest,
     messages.ProblemDiscussionUpdateResponse
   >('/api/problemDiscussion/update/'),
+  updateReply: apiCall<
+    messages.ProblemDiscussionUpdateReplyRequest,
+    messages.ProblemDiscussionUpdateReplyResponse
+  >('/api/problemDiscussion/updateReply/'),
   vote: apiCall<
     messages.ProblemDiscussionVoteRequest,
     messages.ProblemDiscussionVoteResponse

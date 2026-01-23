@@ -19,6 +19,7 @@ class ProblemDiscussions extends \OmegaUp\DAO\VO\VO {
         'discussion_id' => true,
         'problem_id' => true,
         'identity_id' => true,
+        'is_anonymous' => true,
         'content' => true,
         'upvotes' => true,
         'downvotes' => true,
@@ -49,6 +50,11 @@ class ProblemDiscussions extends \OmegaUp\DAO\VO\VO {
         if (isset($data['identity_id'])) {
             $this->identity_id = intval(
                 $data['identity_id']
+            );
+        }
+        if (isset($data['is_anonymous'])) {
+            $this->is_anonymous = boolval(
+                $data['is_anonymous']
             );
         }
         if (isset($data['content'])) {
@@ -120,6 +126,13 @@ class ProblemDiscussions extends \OmegaUp\DAO\VO\VO {
      * @var int|null
      */
     public $identity_id = null;
+
+    /**
+     * Indica si la discusión fue publicada de forma anónima
+     *
+     * @var bool
+     */
+    public $is_anonymous = false;
 
     /**
      * Contenido del comentario en formato markdown

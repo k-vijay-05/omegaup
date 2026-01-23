@@ -426,6 +426,44 @@ class ProblemDiscussion extends \OmegaUp\Controllers\Controller {
     }
 
     /**
+     * Update a reply (only by owner)
+     *
+     * @param \OmegaUp\Request $r
+     * @return array{status: string}
+     *
+     * @omegaup-request-param int $reply_id
+     * @omegaup-request-param string $content
+     */
+    public static function apiUpdateReply(\OmegaUp\Request $r): array {
+        $r->ensureIdentity();
+
+        $replyId = $r->ensureInt('reply_id');
+        $content = $r->ensureString('content');
+        \OmegaUp\Validators::validateStringNonEmpty($content, 'content');
+
+        // Get reply
+        $reply = \OmegaUp\DAO\ProblemDiscussionReplies::getByPK($replyId);
+        if (is_null($reply)) {
+            throw new \OmegaUp\Exceptions\NotFoundException(
+                'replyNotFound'
+            );
+        }
+
+        // Check ownership
+        if ($reply->identity_id !== $r->identity->identity_id) {
+            throw new \OmegaUp\Exceptions\ForbiddenAccessException(
+                'userNotAllowed'
+            );
+        }
+
+        // Update reply
+        $reply->content = $content;
+        \OmegaUp\DAO\ProblemDiscussionReplies::update($reply);
+
+        return ['status' => 'ok'];
+    }
+
+    /**
      * Report a discussion or reply
      *
      * @param \OmegaUp\Request $r

@@ -187,6 +187,7 @@
   - [`/api/problemDiscussion/report/`](#apiproblemdiscussionreport)
   - [`/api/problemDiscussion/resolveReport/`](#apiproblemdiscussionresolvereport)
   - [`/api/problemDiscussion/update/`](#apiproblemdiscussionupdate)
+  - [`/api/problemDiscussion/updateReply/`](#apiproblemdiscussionupdatereply)
   - [`/api/problemDiscussion/vote/`](#apiproblemdiscussionvote)
 - [ProblemForfeited](#problemforfeited)
   - [`/api/problemForfeited/getCounts/`](#apiproblemforfeitedgetcounts)
@@ -3786,6 +3787,23 @@ Update a discussion comment (only by owner)
 | --------------- | -------- | ----------- |
 | `content`       | `string` |             |
 | `discussion_id` | `int`    |             |
+
+### Returns
+
+_Nothing_
+
+## `/api/problemDiscussion/updateReply/`
+
+### Description
+
+Update a reply (only by owner)
+
+### Parameters
+
+| Name       | Type     | Description |
+| ---------- | -------- | ----------- |
+| `content`  | `string` |             |
+| `reply_id` | `int`    |             |
 
 ### Returns
 
