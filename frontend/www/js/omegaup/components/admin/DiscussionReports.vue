@@ -19,69 +19,15 @@
           <table class="table table-striped">
             <thead>
               <tr>
-                <th>{{ T.wordsReportId || 'Report ID' }}</th>
-                <th>{{ T.wordsDiscussion || 'Discussion' }}</th>
-                <th>{{ T.wordsReason || 'Reason' }}</th>
                 <th>{{ T.wordsReporter || 'Reporter' }}</th>
+                <th>{{ T.qualityNominationCreatedBy || 'Created by' }}</th>
                 <th>{{ T.wordsDate || 'Date' }}</th>
+                <th>{{ T.wordsReason || 'Reason' }}</th>
                 <th>{{ T.wordsActions || 'Actions' }}</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="report in reports" :key="report.report_id">
-                <td>{{ report.report_id }}</td>
-                <td>
-                  <div class="discussion-preview">
-                    <div v-if="report.reply" class="mb-2">
-                      <strong class="text-muted small">
-                        {{ T.wordsReply || 'Reply' }}:
-                      </strong>
-                      <div
-                        class="text-truncate"
-                        style="max-width: 300px"
-                        :title="(report.reply && report.reply.content) || ''"
-                      >
-                        {{
-                          (report.reply && report.reply.content) ||
-                          T.replyDeleted ||
-                          'Reply deleted'
-                        }}
-                      </div>
-                    </div>
-                    <div
-                      class="text-truncate"
-                      style="max-width: 300px"
-                      :title="
-                        (report.discussion && report.discussion.content) || ''
-                      "
-                    >
-                      <strong v-if="report.reply" class="text-muted small">
-                        {{ T.wordsDiscussion || 'Discussion' }}:
-                      </strong>
-                      {{
-                        (report.discussion && report.discussion.content) ||
-                        T.discussionDeleted ||
-                        'Discussion deleted'
-                      }}
-                    </div>
-                    <small class="text-muted">
-                      {{ T.wordsProblemId || 'Problem ID' }}:
-                      {{
-                        (report.discussion && report.discussion.problem_id) ||
-                        'N/A'
-                      }}
-                    </small>
-                  </div>
-                </td>
-                <td>
-                  <div
-                    class="text-truncate"
-                    style="max-width: 200px"
-                    :title="report.reason"
-                  >
-                    {{ report.reason }}
-                  </div>
-                </td>
                 <td>
                   {{
                     (report.reporter && report.reporter.username) ||
@@ -89,82 +35,119 @@
                     'Unknown'
                   }}
                 </td>
-                <td>{{ time.formatDateTime(report.created_at) }}</td>
                 <td>
-                  <div class="btn-group" role="group">
-                    <button
-                      class="btn btn-sm btn-danger"
-                      type="button"
-                      :disabled="!report.discussion && !report.reply"
-                      @click="
-                        onDelete(
-                          report.report_id,
-                          report.discussion_id,
-                          report.reply_id,
-                        )
-                      "
-                    >
-                      {{ T.wordsDelete || 'Delete' }}
-                    </button>
-                    <button
-                      class="btn btn-sm btn-secondary"
-                      type="button"
-                      @click="onDismiss(report.report_id)"
-                    >
-                      {{ T.discussionReportDismiss || 'Dismiss' }}
-                    </button>
-                  </div>
+                  {{
+                    (report.author && report.author.username) ||
+                    T.wordsUnknown ||
+                    'Unknown'
+                  }}
+                </td>
+                <td>{{ time.formatDate(report.created_at) }}</td>
+                <td>
+                  {{ getReasonLabel(report.reason) }}
+                </td>
+                <td>
+                  <a
+                    class="btn btn-sm btn-link"
+                    href="#"
+                    @click.prevent="showDetails(report.report_id)"
+                  >
+                    {{ T.wordsDetails || 'Details' }}
+                  </a>
                 </td>
               </tr>
             </tbody>
           </table>
-          <nav v-if="totalPages > 1" aria-label="Page navigation">
-            <ul class="pagination justify-content-center">
-              <li class="page-item" :class="{ disabled: page === 1 }">
-                <a
-                  class="page-link"
-                  href="#"
-                  @click.prevent="goToPage(page - 1)"
-                >
-                  {{ T.wordsPrevious || 'Previous' }}
-                </a>
-              </li>
-              <li
-                v-for="pageNum in visiblePages"
-                :key="pageNum"
-                class="page-item"
-                :class="{ active: pageNum === page, disabled: pageNum === -1 }"
-              >
-                <a
-                  v-if="pageNum !== -1"
-                  class="page-link"
-                  href="#"
-                  @click.prevent="goToPage(pageNum)"
-                >
-                  {{ pageNum }}
-                </a>
-                <span v-else class="page-link">...</span>
-              </li>
-              <li class="page-item" :class="{ disabled: page === totalPages }">
-                <a
-                  class="page-link"
-                  href="#"
-                  @click.prevent="goToPage(page + 1)"
-                >
-                  {{ T.wordsNext || 'Next' }}
-                </a>
-              </li>
-            </ul>
-          </nav>
-          <div class="text-center mt-2">
-            <small class="text-muted">
-              {{ T.wordsShowing || 'Showing' }} {{ startItem }}-{{ endItem }}
-              {{ T.wordsOf || 'of' }} {{ total }}
-            </small>
-          </div>
+          <omegaup-common-paginator
+            :pager-items="pagerItems"
+            class="mb-3"
+            @page-changed="$emit('page-change', $event)"
+          ></omegaup-common-paginator>
         </div>
       </div>
     </div>
+
+    <b-modal
+      v-model="showDetailsModal"
+      :title="T.wordsDetails || 'Details'"
+      size="lg"
+      static
+      lazy
+      @hide="showDetailsModal = false"
+    >
+      <div v-if="selectedReport">
+        <div class="mb-3">
+          <strong>{{ T.wordsReason || 'Reason' }}:</strong>
+          <div class="mt-2">
+            <div class="mb-2">
+              <span class="badge badge-primary">
+                {{ getReasonLabel(selectedReport.reason) }}
+              </span>
+            </div>
+            <div
+              v-if="getReasonFullText(selectedReport.reason)"
+              class="border rounded p-2 bg-light"
+              style="word-wrap: break-word; white-space: pre-wrap"
+            >
+              {{ getReasonFullText(selectedReport.reason) }}
+            </div>
+          </div>
+        </div>
+        <div v-if="selectedReport.reply" class="mb-3">
+          <strong>{{ T.wordsReply || 'Reply' }}:</strong>
+          <div
+            class="border rounded p-2 bg-light mt-2"
+            style="word-wrap: break-word; white-space: pre-wrap"
+          >
+            {{
+              (selectedReport.reply && selectedReport.reply.content) ||
+              T.replyDeleted ||
+              'Reply deleted'
+            }}
+          </div>
+        </div>
+        <div class="mb-3">
+          <strong>{{ T.wordsDiscussion || 'Discussion' }}:</strong>
+          <div
+            class="border rounded p-2 bg-light mt-2"
+            style="word-wrap: break-word; white-space: pre-wrap"
+          >
+            {{
+              (selectedReport.discussion &&
+                selectedReport.discussion.content) ||
+              T.discussionDeleted ||
+              'Discussion deleted'
+            }}
+          </div>
+        </div>
+      </div>
+      <template #modal-footer>
+        <div class="w-100 d-flex justify-content-end">
+          <button
+            class="btn btn-secondary mr-2"
+            type="button"
+            @click="showDetailsModal = false"
+          >
+            {{ T.wordsClose || 'Close' }}
+          </button>
+          <button
+            class="btn btn-danger mr-2"
+            type="button"
+            :disabled="!selectedReport || !hasContent(selectedReport)"
+            @click="handleDeleteFromModal"
+          >
+            {{ T.wordsDelete || 'Delete' }}
+          </button>
+          <button
+            class="btn btn-secondary"
+            type="button"
+            @click="handleDismissFromModal"
+          >
+            {{ T.discussionReportDismiss || 'Dismiss' }}
+          </button>
+        </div>
+      </template>
+    </b-modal>
   </div>
 </template>
 
@@ -172,71 +155,121 @@
 import { Vue, Component, Prop, Emit } from 'vue-property-decorator';
 import T from '../../lang';
 import * as time from '../../time';
-import { messages } from '../../api_types';
+import { messages, types } from '../../api_types';
+import common_Paginator from '../common/Paginator.vue';
 
-@Component
+import 'bootstrap-vue/dist/bootstrap-vue.css';
+import { ModalPlugin } from 'bootstrap-vue';
+Vue.use(ModalPlugin);
+
+@Component({
+  components: {
+    'omegaup-common-paginator': common_Paginator,
+  },
+})
 export default class DiscussionReports extends Vue {
   @Prop() reports!: messages.ProblemDiscussionListReportsResponse['reports'];
   @Prop() total!: number;
   @Prop() page!: number;
   @Prop() pageSize!: number;
   @Prop() isLoading!: boolean;
+  @Prop() pagerItems!: types.PageItem[];
 
   T = T;
   time = time;
+  showDetailsModal = false;
+  selectedReport:
+    | messages.ProblemDiscussionListReportsResponse['reports'][0]
+    | null = null;
 
-  get totalPages(): number {
-    return Math.ceil(this.total / this.pageSize);
-  }
-
-  get startItem(): number {
-    return (this.page - 1) * this.pageSize + 1;
-  }
-
-  get endItem(): number {
-    return Math.min(this.page * this.pageSize, this.total);
-  }
-
-  get visiblePages(): number[] {
-    const pages: number[] = [];
-    const total = this.totalPages;
-    const current = this.page;
-
-    if (total <= 7) {
-      for (let i = 1; i <= total; i++) {
-        pages.push(i);
-      }
-    } else {
-      if (current <= 3) {
-        for (let i = 1; i <= 4; i++) {
-          pages.push(i);
-        }
-        pages.push(-1); // ellipsis
-        pages.push(total);
-      } else if (current >= total - 2) {
-        pages.push(1);
-        pages.push(-1); // ellipsis
-        for (let i = total - 3; i <= total; i++) {
-          pages.push(i);
-        }
-      } else {
-        pages.push(1);
-        pages.push(-1); // ellipsis
-        for (let i = current - 1; i <= current + 1; i++) {
-          pages.push(i);
-        }
-        pages.push(-1); // ellipsis
-        pages.push(total);
-      }
+  getReasonLabel(reason: string): string {
+    if (!reason) return T.wordsUnknown || 'Unknown';
+    // Extract the dropdown reason (part before ":")
+    const colonIndex = reason.indexOf(':');
+    if (colonIndex > 0) {
+      const label = reason.substring(0, colonIndex).trim();
+      // Map reason codes to user-friendly labels
+      const reasonMap: { [key: string]: string } = {
+        offensive:
+          T.reportDiscussionFormOffensive ||
+          'It is offensive or inappropriate.',
+        spam: T.reportDiscussionFormSpam || 'It is spam.',
+        'poorly-described':
+          T.reportDiscussionFormPoorlyDescribed ||
+          'It is poorly described or unclear.',
+        'off-topic':
+          T.reportDiscussionFormOffTopic || 'It is off-topic or not relevant.',
+        duplicate:
+          T.reportDiscussionFormDuplicate ||
+          'It is a duplicate of another discussion/reply.',
+        other: T.reportDiscussionFormOtherReason || 'Other reason.',
+      };
+      return reasonMap[label] || label;
     }
-    return pages;
+    // If no colon, check if it's a known reason code
+    const reasonMap: { [key: string]: string } = {
+      offensive:
+        T.reportDiscussionFormOffensive || 'It is offensive or inappropriate.',
+      spam: T.reportDiscussionFormSpam || 'It is spam.',
+      'poorly-described':
+        T.reportDiscussionFormPoorlyDescribed ||
+        'It is poorly described or unclear.',
+      'off-topic':
+        T.reportDiscussionFormOffTopic || 'It is off-topic or not relevant.',
+      duplicate:
+        T.reportDiscussionFormDuplicate ||
+        'It is a duplicate of another discussion/reply.',
+      other: T.reportDiscussionFormOtherReason || 'Other reason.',
+    };
+    return reasonMap[reason.trim()] || reason.trim();
   }
 
-  goToPage(page: number): void {
-    if (page < 1 || page > this.totalPages || page === this.page) {
-      return;
+  getReasonFullText(reason: string): string {
+    if (!reason) return '';
+    // Extract the full text after the reason label
+    const colonIndex = reason.indexOf(':');
+    if (colonIndex > 0) {
+      return reason.substring(colonIndex + 1).trim();
     }
-    this.$emit('page-change', page);
+    return '';
+  }
+
+  getReplyId(
+    report: messages.ProblemDiscussionListReportsResponse['reports'][0],
+  ): number | null {
+    return (report as any).reply_id || null;
+  }
+
+  hasContent(
+    report: messages.ProblemDiscussionListReportsResponse['reports'][0] | null,
+  ): boolean {
+    if (!report) return false;
+    return !!(report.discussion || (report as any).reply);
+  }
+
+  showDetails(reportId: number): void {
+    const report = this.reports.find((r) => r.report_id === reportId);
+    if (report) {
+      this.selectedReport = report;
+      this.showDetailsModal = true;
+    }
+  }
+
+  handleDeleteFromModal(): void {
+    if (!this.selectedReport) return;
+    this.showDetailsModal = false;
+    const replyId = this.getReplyId(this.selectedReport);
+    this.onDelete(
+      this.selectedReport.report_id,
+      this.selectedReport.discussion_id,
+      replyId,
+    );
+  }
+
+  handleDismissFromModal(): void {
+    if (!this.selectedReport) return;
+    this.showDetailsModal = false;
+    this.onDismiss(this.selectedReport.report_id);
   }
 
   @Emit('delete-discussion')
@@ -256,7 +289,8 @@ export default class DiscussionReports extends Vue {
 </script>
 
 <style scoped>
-.discussion-preview {
-  max-width: 300px;
+.badge {
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
 }
 </style>

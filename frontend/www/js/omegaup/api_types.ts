@@ -5808,12 +5808,20 @@ export namespace messages {
   export type ProblemDiscussionListReportsResponse = {
     page: number;
     page_size: number;
+    pager_items: {
+      class: string;
+      label: string;
+      page?: number;
+      url?: string;
+    }[];
     reports: {
+      author: { username: string };
       created_at: Date;
       discussion: { content: string; problem_id: number };
       discussion_id: number;
       identity_id: number;
       reason: string;
+      reply?: { content: string; reply_id: number };
       report_id: number;
       reporter: { username: string };
       status: string;

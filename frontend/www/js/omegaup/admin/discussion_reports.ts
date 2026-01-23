@@ -4,7 +4,7 @@ import * as api from '../api';
 import * as ui from '../ui';
 import T from '../lang';
 import Vue from 'vue';
-import { messages } from '../api_types';
+import { messages, types } from '../api_types';
 
 OmegaUp.on('ready', () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -20,6 +20,7 @@ OmegaUp.on('ready', () => {
         page: 1,
         pageSize: 20,
         isLoading: false,
+        pagerItems: [] as types.PageItem[],
       };
     },
     mounted(): void {
@@ -33,9 +34,10 @@ OmegaUp.on('ready', () => {
           page: this.page,
           page_size: this.pageSize,
         })
-          .then((data) => {
+          .then((data: any) => {
             this.reports = data.reports;
             this.total = data.total;
+            this.pagerItems = data.pager_items || [];
           })
           .catch(ui.apiError)
           .finally(() => {
@@ -110,6 +112,7 @@ OmegaUp.on('ready', () => {
           page: vm.page,
           pageSize: vm.pageSize,
           isLoading: vm.isLoading,
+          pagerItems: vm.pagerItems,
         },
         on: {
           'delete-discussion': (data: {

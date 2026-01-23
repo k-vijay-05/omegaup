@@ -3731,12 +3731,13 @@ List all open reports (admin only)
 
 ### Returns
 
-| Name        | Type                                                                                                                                                                                                            |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `page`      | `number`                                                                                                                                                                                                        |
-| `page_size` | `number`                                                                                                                                                                                                        |
-| `reports`   | `{ created_at: Date; discussion: { content: string; problem_id: number; }; discussion_id: number; identity_id: number; reason: string; report_id: number; reporter: { username: string; }; status: string; }[]` |
-| `total`     | `number`                                                                                                                                                                                                        |
+| Name          | Type                                                                                                                                                                                                                                                                                          |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `page`        | `number`                                                                                                                                                                                                                                                                                      |
+| `page_size`   | `number`                                                                                                                                                                                                                                                                                      |
+| `pager_items` | `{ class: string; label: string; page: number; url: string; }[]`                                                                                                                                                                                                                              |
+| `reports`     | `{ author: { username: string; }; created_at: Date; discussion: { content: string; problem_id: number; }; discussion_id: number; identity_id: number; reason: string; reply: { content: string; reply_id: number; }; report_id: number; reporter: { username: string; }; status: string; }[]` |
+| `total`       | `number`                                                                                                                                                                                                                                                                                      |
 
 ## `/api/problemDiscussion/report/`
 

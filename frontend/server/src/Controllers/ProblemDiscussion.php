@@ -539,7 +539,7 @@ class ProblemDiscussion extends \OmegaUp\Controllers\Controller {
      * List all open reports (admin only)
      *
      * @param \OmegaUp\Request $r
-     * @return array{reports: list<array{report_id: int, discussion_id: int, identity_id: int, reason: string, status: string, created_at: \OmegaUp\Timestamp, discussion: array{content: string, problem_id: int}, reporter: array{username: string}}>, total: int, page: int, page_size: int}
+     * @return array{reports: list<array{report_id: int, discussion_id: int, identity_id: int, reason: string, status: string, created_at: \OmegaUp\Timestamp, discussion: array{content: string, problem_id: int}, reply: array{content: string, reply_id: int}|null, reporter: array{username: string}, author: array{username: string}}>, total: int, page: int, page_size: int, pager_items: list<array{class: string, label: string, page: int|null, url: string|null}>}
      *
      * @omegaup-request-param int|null $page
      * @omegaup-request-param int|null $page_size
@@ -585,6 +585,20 @@ class ProblemDiscussion extends \OmegaUp\Controllers\Controller {
                 $report->identity_id
             );
 
+            // Get author identity (creator of the discussion or reply)
+            $authorIdentity = null;
+            if ($reply) {
+                // If it's a reply report, get the reply author
+                $authorIdentity = \OmegaUp\DAO\Identities::getByPK(
+                    $reply->identity_id
+                );
+            } else {
+                // If it's a discussion report, get the discussion author
+                $authorIdentity = \OmegaUp\DAO\Identities::getByPK(
+                    $discussion->identity_id
+                );
+            }
+
             $enrichedReports[] = [
                 'report_id' => $report->report_id,
                 'discussion_id' => $report->discussion_id,
@@ -604,14 +618,26 @@ class ProblemDiscussion extends \OmegaUp\Controllers\Controller {
                 'reporter' => [
                     'username' => $reporterIdentity ? $reporterIdentity->username : '',
                 ],
+                'author' => [
+                    'username' => $authorIdentity ? $authorIdentity->username : '',
+                ],
             ];
         }
+
+        $pagerItems = \OmegaUp\Pager::paginate(
+            $result['total'],
+            $pageSize,
+            $page,
+            adjacent: 5,
+            params: []
+        );
 
         return [
             'reports' => $enrichedReports,
             'total' => $result['total'],
             'page' => $page,
             'page_size' => $pageSize,
+            'pager_items' => $pagerItems,
         ];
     }
 
