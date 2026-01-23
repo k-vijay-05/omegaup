@@ -668,17 +668,20 @@ CREATE TABLE `Problem_Discussion_Replies` (
 CREATE TABLE `Problem_Discussion_Reports` (
   `report_id` int NOT NULL AUTO_INCREMENT,
   `discussion_id` int NOT NULL COMMENT 'El comentario que fue reportado',
+  `reply_id` int DEFAULT NULL COMMENT 'El reply que fue reportado (NULL si es un comentario principal)',
   `identity_id` int NOT NULL COMMENT 'Identidad del usuario que reportó',
   `reason` text COMMENT 'Razón del reporte',
   `status` enum('open','resolved','dismissed') NOT NULL DEFAULT 'open' COMMENT 'Estado del reporte',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha del reporte',
   PRIMARY KEY (`report_id`),
+  UNIQUE KEY `unique_report` (`discussion_id`,`reply_id`,`identity_id`),
   KEY `idx_discussion_id` (`discussion_id`),
   KEY `idx_identity_id` (`identity_id`),
   KEY `idx_status` (`status`),
-  KEY `idx_discussion_identity` (`discussion_id`,`identity_id`),
+  KEY `idx_reply_id` (`reply_id`),
   CONSTRAINT `fk_pdre_discussion_id` FOREIGN KEY (`discussion_id`) REFERENCES `Problem_Discussions` (`discussion_id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_pdre_identity_id` FOREIGN KEY (`identity_id`) REFERENCES `Identities` (`identity_id`) ON DELETE CASCADE
+  CONSTRAINT `fk_pdre_identity_id` FOREIGN KEY (`identity_id`) REFERENCES `Identities` (`identity_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_pdre_reply_id` FOREIGN KEY (`reply_id`) REFERENCES `Problem_Discussion_Replies` (`reply_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Reportes de comentarios inapropiados en discusiones';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;

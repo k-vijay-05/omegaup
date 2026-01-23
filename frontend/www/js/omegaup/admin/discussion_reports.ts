@@ -42,14 +42,23 @@ OmegaUp.on('ready', () => {
             this.isLoading = false;
           });
       },
-      onDeleteDiscussion(reportId: number, discussionId: number): void {
-        // Delete the discussion first
-        api.ProblemDiscussion.delete({
+      onDeleteDiscussion(
+        reportId: number,
+        discussionId: number,
+        replyId?: number | null,
+      ): void {
+        // Delete the discussion or reply
+        const deleteParams: any = {
           discussion_id: discussionId,
-        })
+        };
+        if (replyId) {
+          deleteParams.reply_id = replyId;
+        }
+
+        api.ProblemDiscussion.delete(deleteParams)
           .then(() => {
             // Try to resolve the report (it may already be cascade-deleted)
-            // If it fails, that's okay - the discussion was deleted successfully
+            // If it fails, that's okay - the discussion/reply was deleted successfully
             return api.ProblemDiscussion.resolveReport({
               report_id: reportId,
               status: 'resolved',
@@ -60,7 +69,9 @@ OmegaUp.on('ready', () => {
           })
           .then(() => {
             ui.success(
-              T.discussionDeleted || 'Discussion deleted successfully',
+              replyId
+                ? T.replyDeleted || 'Reply deleted successfully'
+                : T.discussionDeleted || 'Discussion deleted successfully',
             );
             this.loadReports();
           })
@@ -104,8 +115,13 @@ OmegaUp.on('ready', () => {
           'delete-discussion': (data: {
             reportId: number;
             discussionId: number;
+            replyId?: number | null;
           }) => {
-            vm.onDeleteDiscussion(data.reportId, data.discussionId);
+            vm.onDeleteDiscussion(
+              data.reportId,
+              data.discussionId,
+              data.replyId,
+            );
           },
           'resolve-report': (data: {
             reportId: number;

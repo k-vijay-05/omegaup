@@ -32,6 +32,22 @@
                 <td>{{ report.report_id }}</td>
                 <td>
                   <div class="discussion-preview">
+                    <div v-if="report.reply" class="mb-2">
+                      <strong class="text-muted small">
+                        {{ T.wordsReply || 'Reply' }}:
+                      </strong>
+                      <div
+                        class="text-truncate"
+                        style="max-width: 300px"
+                        :title="(report.reply && report.reply.content) || ''"
+                      >
+                        {{
+                          (report.reply && report.reply.content) ||
+                          T.replyDeleted ||
+                          'Reply deleted'
+                        }}
+                      </div>
+                    </div>
                     <div
                       class="text-truncate"
                       style="max-width: 300px"
@@ -39,6 +55,9 @@
                         (report.discussion && report.discussion.content) || ''
                       "
                     >
+                      <strong v-if="report.reply" class="text-muted small">
+                        {{ T.wordsDiscussion || 'Discussion' }}:
+                      </strong>
                       {{
                         (report.discussion && report.discussion.content) ||
                         T.discussionDeleted ||
@@ -76,8 +95,14 @@
                     <button
                       class="btn btn-sm btn-danger"
                       type="button"
-                      :disabled="!report.discussion"
-                      @click="onDelete(report.report_id, report.discussion_id)"
+                      :disabled="!report.discussion && !report.reply"
+                      @click="
+                        onDelete(
+                          report.report_id,
+                          report.discussion_id,
+                          report.reply_id,
+                        )
+                      "
                     >
                       {{ T.wordsDelete || 'Delete' }}
                     </button>
@@ -218,8 +243,9 @@ export default class DiscussionReports extends Vue {
   onDelete(
     reportId: number,
     discussionId: number,
-  ): { reportId: number; discussionId: number } {
-    return { reportId, discussionId };
+    replyId?: number | null,
+  ): { reportId: number; discussionId: number; replyId?: number | null } {
+    return { reportId, discussionId, replyId };
   }
 
   @Emit('resolve-report')

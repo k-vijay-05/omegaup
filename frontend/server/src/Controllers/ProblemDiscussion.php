@@ -162,18 +162,60 @@ class ProblemDiscussion extends \OmegaUp\Controllers\Controller {
     }
 
     /**
-     * Delete a discussion comment (by owner, or by discussion reviewer/admin)
+     * Delete a discussion comment or reply (by owner, or by discussion reviewer/admin)
      *
      * @param \OmegaUp\Request $r
      * @return array{status: string}
      *
      * @omegaup-request-param int $discussion_id
+     * @omegaup-request-param int|null $reply_id
      */
     public static function apiDelete(\OmegaUp\Request $r): array {
         $r->ensureIdentity();
 
         $discussionId = $r->ensureInt('discussion_id');
+        $replyId = $r->ensureOptionalInt('reply_id');
 
+        // If reply_id is provided, delete only the reply
+        if (!is_null($replyId)) {
+            // Get reply
+            $reply = \OmegaUp\DAO\ProblemDiscussionReplies::getByPK($replyId);
+            if (is_null($reply)) {
+                throw new \OmegaUp\Exceptions\NotFoundException(
+                    'replyNotFound'
+                );
+            }
+
+            // Verify reply belongs to the discussion
+            if ($reply->discussion_id !== $discussionId) {
+                throw new \OmegaUp\Exceptions\InvalidParameterException(
+                    'parameterInvalid',
+                    'reply_id'
+                );
+            }
+
+            // Check ownership or admin privileges
+            $isOwner = $reply->identity_id === $r->identity->identity_id;
+            $isDiscussionReviewer = \OmegaUp\Authorization::isDiscussionReviewer(
+                $r->identity
+            );
+            $isSystemAdmin = \OmegaUp\Authorization::isSystemAdmin(
+                $r->identity
+            );
+
+            if (!$isOwner && !$isDiscussionReviewer && !$isSystemAdmin) {
+                throw new \OmegaUp\Exceptions\ForbiddenAccessException(
+                    'userNotAllowed'
+                );
+            }
+
+            // Delete reply (cascade will delete related reports)
+            \OmegaUp\DAO\ProblemDiscussionReplies::delete($reply);
+
+            return ['status' => 'ok'];
+        }
+
+        // Otherwise, delete the entire discussion
         // Get discussion
         $discussion = \OmegaUp\DAO\ProblemDiscussions::getByPK($discussionId);
         if (is_null($discussion)) {
@@ -384,18 +426,20 @@ class ProblemDiscussion extends \OmegaUp\Controllers\Controller {
     }
 
     /**
-     * Report a discussion
+     * Report a discussion or reply
      *
      * @param \OmegaUp\Request $r
      * @return array{status: string, report_id: int}
      *
      * @omegaup-request-param int $discussion_id
+     * @omegaup-request-param int|null $reply_id
      * @omegaup-request-param string $reason
      */
     public static function apiReport(\OmegaUp\Request $r): array {
         $r->ensureIdentity();
 
         $discussionId = $r->ensureInt('discussion_id');
+        $replyId = $r->ensureOptionalInt('reply_id');
         $reason = $r->ensureString('reason');
         \OmegaUp\Validators::validateStringNonEmpty($reason, 'reason');
 
@@ -407,11 +451,28 @@ class ProblemDiscussion extends \OmegaUp\Controllers\Controller {
             );
         }
 
-        // Check if user already reported
+        // If reply_id is provided, verify the reply exists and belongs to the discussion
+        if (!is_null($replyId)) {
+            $reply = \OmegaUp\DAO\ProblemDiscussionReplies::getByPK($replyId);
+            if (is_null($reply)) {
+                throw new \OmegaUp\Exceptions\NotFoundException(
+                    'replyNotFound'
+                );
+            }
+            if ($reply->discussion_id !== $discussionId) {
+                throw new \OmegaUp\Exceptions\InvalidParameterException(
+                    'parameterInvalid',
+                    'reply_id'
+                );
+            }
+        }
+
+        // Check if user already reported this discussion/reply combination
         if (
             \OmegaUp\DAO\ProblemDiscussionReports::hasUserReported(
                 $discussionId,
-                $r->identity->identity_id
+                $r->identity->identity_id,
+                $replyId
             )
         ) {
             throw new \OmegaUp\Exceptions\DuplicatedEntryInDatabaseException(
@@ -422,6 +483,7 @@ class ProblemDiscussion extends \OmegaUp\Controllers\Controller {
         // Create report
         $report = new \OmegaUp\DAO\VO\ProblemDiscussionReports([
             'discussion_id' => $discussionId,
+            'reply_id' => $replyId,
             'identity_id' => $r->identity->identity_id,
             'reason' => $reason,
             'status' => 'open',
@@ -458,7 +520,7 @@ class ProblemDiscussion extends \OmegaUp\Controllers\Controller {
             $pageSize
         );
 
-        // Enrich reports with discussion and reporter info
+        // Enrich reports with discussion/reply and reporter info
         $enrichedReports = [];
         foreach ($result['reports'] as $report) {
             // Get discussion
@@ -469,6 +531,17 @@ class ProblemDiscussion extends \OmegaUp\Controllers\Controller {
                 continue; // Skip if discussion was deleted
             }
 
+            // Get reply if this is a reply report
+            $reply = null;
+            if (!is_null($report->reply_id)) {
+                $reply = \OmegaUp\DAO\ProblemDiscussionReplies::getByPK(
+                    $report->reply_id
+                );
+                if (is_null($reply)) {
+                    continue; // Skip if reply was deleted
+                }
+            }
+
             // Get reporter identity
             $reporterIdentity = \OmegaUp\DAO\Identities::getByPK(
                 $report->identity_id
@@ -477,6 +550,7 @@ class ProblemDiscussion extends \OmegaUp\Controllers\Controller {
             $enrichedReports[] = [
                 'report_id' => $report->report_id,
                 'discussion_id' => $report->discussion_id,
+                'reply_id' => $report->reply_id,
                 'identity_id' => $report->identity_id,
                 'reason' => $report->reason,
                 'status' => $report->status,
@@ -485,6 +559,10 @@ class ProblemDiscussion extends \OmegaUp\Controllers\Controller {
                     'content' => $discussion->content,
                     'problem_id' => $discussion->problem_id,
                 ],
+                'reply' => $reply ? [
+                    'content' => $reply->content,
+                    'reply_id' => $reply->reply_id,
+                ] : null,
                 'reporter' => [
                     'username' => $reporterIdentity ? $reporterIdentity->username : '',
                 ],

@@ -117,6 +117,17 @@
                   <omegaup-markdown
                     :markdown="reply.content"
                   ></omegaup-markdown>
+                  <div class="mt-2">
+                    <button
+                      class="btn btn-sm btn-outline-danger"
+                      @click="
+                        onReportReply(discussion.discussion_id, reply.reply_id)
+                      "
+                    >
+                      <font-awesome-icon :icon="['fas', 'flag']" class="mr-1" />
+                      {{ T.wordsReport || 'Report' }}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -406,6 +417,24 @@ export default class ProblemDiscussion extends Vue {
     }
     return {
       discussion_id: discussionId,
+      reason: reason.trim(),
+    };
+  }
+
+  @Emit('report')
+  onReportReply(
+    discussionId: number,
+    replyId: number,
+  ): { discussion_id: number; reply_id: number; reason: string } | null {
+    const reason = window.prompt(
+      T.reportReason || 'Please provide a reason for reporting:',
+    );
+    if (!reason || !reason.trim()) {
+      return null;
+    }
+    return {
+      discussion_id: discussionId,
+      reply_id: replyId,
       reason: reason.trim(),
     };
   }

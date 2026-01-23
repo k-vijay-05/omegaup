@@ -104,15 +104,17 @@ class ProblemDiscussionReports extends \OmegaUp\DAO\Base\ProblemDiscussionReport
     }
 
     /**
-     * Check if user already reported a discussion
+     * Check if user already reported a discussion or reply
      *
      * @param int $discussionId
      * @param int $identityId
+     * @param int|null $replyId
      * @return bool
      */
     final public static function hasUserReported(
         int $discussionId,
-        int $identityId
+        int $identityId,
+        ?int $replyId = null
     ): bool {
         $sql = '
             SELECT
@@ -120,11 +122,11 @@ class ProblemDiscussionReports extends \OmegaUp\DAO\Base\ProblemDiscussionReport
             FROM
                 `Problem_Discussion_Reports`
             WHERE
-                `discussion_id` = ? AND `identity_id` = ?;';
+                `discussion_id` = ? AND `identity_id` = ? AND (`reply_id` = ? OR (`reply_id` IS NULL AND ? IS NULL));';
         /** @var int */
         $count = \OmegaUp\MySQLConnection::getInstance()->GetOne(
             $sql,
-            [$discussionId, $identityId]
+            [$discussionId, $identityId, $replyId, $replyId]
         );
         return $count > 0;
     }

@@ -18,6 +18,7 @@ class ProblemDiscussionReports extends \OmegaUp\DAO\VO\VO {
     const FIELD_NAMES = [
         'report_id' => true,
         'discussion_id' => true,
+        'reply_id' => true,
         'identity_id' => true,
         'reason' => true,
         'status' => true,
@@ -42,6 +43,11 @@ class ProblemDiscussionReports extends \OmegaUp\DAO\VO\VO {
         if (isset($data['discussion_id'])) {
             $this->discussion_id = intval(
                 $data['discussion_id']
+            );
+        }
+        if (isset($data['reply_id'])) {
+            $this->reply_id = intval(
+                $data['reply_id']
             );
         }
         if (isset($data['identity_id'])) {
@@ -91,6 +97,13 @@ class ProblemDiscussionReports extends \OmegaUp\DAO\VO\VO {
      * @var int|null
      */
     public $discussion_id = null;
+
+    /**
+     * El reply que fue reportado (NULL si es un comentario principal)
+     *
+     * @var int|null
+     */
+    public $reply_id = null;
 
     /**
      * Identidad del usuario que reportó

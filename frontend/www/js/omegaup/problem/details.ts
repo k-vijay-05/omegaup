@@ -573,6 +573,7 @@ OmegaUp.on('ready', async () => {
           report: (
             request: {
               discussion_id: number;
+              reply_id?: number;
               reason: string;
             } | null,
           ) => {

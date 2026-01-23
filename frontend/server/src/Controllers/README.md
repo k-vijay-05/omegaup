@@ -3662,13 +3662,14 @@ Create a reply to a discussion
 
 ### Description
 
-Delete a discussion comment (by owner, or by discussion reviewer/admin)
+Delete a discussion comment or reply (by owner, or by discussion reviewer/admin)
 
 ### Parameters
 
-| Name            | Type  | Description |
-| --------------- | ----- | ----------- |
-| `discussion_id` | `int` |             |
+| Name            | Type        | Description |
+| --------------- | ----------- | ----------- |
+| `discussion_id` | `int`       |             |
+| `reply_id`      | `int\|null` |             |
 
 ### Returns
 
@@ -3740,14 +3741,15 @@ List all open reports (admin only)
 
 ### Description
 
-Report a discussion
+Report a discussion or reply
 
 ### Parameters
 
-| Name            | Type     | Description |
-| --------------- | -------- | ----------- |
-| `discussion_id` | `int`    |             |
-| `reason`        | `string` |             |
+| Name            | Type        | Description |
+| --------------- | ----------- | ----------- |
+| `discussion_id` | `int`       |             |
+| `reason`        | `string`    |             |
+| `reply_id`      | `int\|null` |             |
 
 ### Returns
 

@@ -33,6 +33,7 @@ abstract class ProblemDiscussionReports {
                 `Problem_Discussion_Reports`
             SET
                 `discussion_id` = ?,
+                `reply_id` = ?,
                 `identity_id` = ?,
                 `reason` = ?,
                 `status` = ?,
@@ -46,6 +47,11 @@ abstract class ProblemDiscussionReports {
                 is_null($Problem_Discussion_Reports->discussion_id) ?
                 null :
                 intval($Problem_Discussion_Reports->discussion_id)
+            ),
+            (
+                is_null($Problem_Discussion_Reports->reply_id) ?
+                null :
+                intval($Problem_Discussion_Reports->reply_id)
             ),
             (
                 is_null($Problem_Discussion_Reports->identity_id) ?
@@ -80,6 +86,7 @@ abstract class ProblemDiscussionReports {
             SELECT
                 `Problem_Discussion_Reports`.`report_id`,
                 `Problem_Discussion_Reports`.`discussion_id`,
+                `Problem_Discussion_Reports`.`reply_id`,
                 `Problem_Discussion_Reports`.`identity_id`,
                 `Problem_Discussion_Reports`.`reason`,
                 `Problem_Discussion_Reports`.`status`,
@@ -226,6 +233,7 @@ abstract class ProblemDiscussionReports {
             SELECT
                 `Problem_Discussion_Reports`.`report_id`,
                 `Problem_Discussion_Reports`.`discussion_id`,
+                `Problem_Discussion_Reports`.`reply_id`,
                 `Problem_Discussion_Reports`.`identity_id`,
                 `Problem_Discussion_Reports`.`reason`,
                 `Problem_Discussion_Reports`.`status`,
@@ -275,11 +283,13 @@ abstract class ProblemDiscussionReports {
             INSERT INTO
                 `Problem_Discussion_Reports` (
                     `discussion_id`,
+                    `reply_id`,
                     `identity_id`,
                     `reason`,
                     `status`,
                     `created_at`
                 ) VALUES (
+                    ?,
                     ?,
                     ?,
                     ?,
@@ -291,6 +301,11 @@ abstract class ProblemDiscussionReports {
                 is_null($Problem_Discussion_Reports->discussion_id) ?
                 null :
                 intval($Problem_Discussion_Reports->discussion_id)
+            ),
+            (
+                is_null($Problem_Discussion_Reports->reply_id) ?
+                null :
+                intval($Problem_Discussion_Reports->reply_id)
             ),
             (
                 is_null($Problem_Discussion_Reports->identity_id) ?
