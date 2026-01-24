@@ -124,13 +124,6 @@
       <template #modal-footer>
         <div class="w-100 d-flex justify-content-end">
           <button
-            class="btn btn-secondary mr-2"
-            type="button"
-            @click="showDetailsModal = false"
-          >
-            {{ T.wordsClose || 'Close' }}
-          </button>
-          <button
             class="btn btn-danger mr-2"
             type="button"
             :disabled="!selectedReport || !hasContent(selectedReport)"
