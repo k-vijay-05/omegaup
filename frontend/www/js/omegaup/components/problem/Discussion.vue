@@ -19,8 +19,11 @@
         class="form-control form-control-sm w-auto"
         @change="onSortChanged"
       >
-        <option value="created_at">
-          {{ T.wordsRecent || 'Recent' }}
+        <option value="most_recent">
+          {{ T.wordsMostRecent || 'Most Recent' }}
+        </option>
+        <option value="least_recent">
+          {{ T.wordsLeastRecent || 'Least Recent' }}
         </option>
         <option value="upvotes">
           {{ T.wordsMostUpvotes || 'Most upvotes' }}
@@ -259,7 +262,29 @@
                   rows="4"
                   :placeholder="T.wordsWriteReply || 'Write a reply...'"
                 ></textarea>
+                <div
+                  v-if="showReplyPreview && threadReplyText.trim()"
+                  class="mt-3"
+                >
+                  <div class="border rounded p-3 bg-light">
+                    <h6 class="mb-2">{{ T.wordsPreview || 'Preview' }}:</h6>
+                    <omegaup-markdown
+                      :markdown="threadReplyText"
+                    ></omegaup-markdown>
+                  </div>
+                </div>
                 <div class="d-flex justify-content-end mt-3">
+                  <button
+                    class="btn btn-secondary btn-sm mr-2"
+                    :disabled="!threadReplyText.trim()"
+                    @click="showReplyPreview = !showReplyPreview"
+                  >
+                    {{
+                      showReplyPreview
+                        ? T.wordsHidePreview || 'Hide Preview'
+                        : T.wordsPreview || 'Preview'
+                    }}
+                  </button>
                   <button
                     class="btn btn-primary btn-sm"
                     :disabled="!threadReplyText.trim()"
@@ -338,8 +363,28 @@
                 'Share your thoughts or ask a question...'
               "
             ></textarea>
+            <div
+              v-if="showCommentPreview && newCommentText.trim()"
+              class="mt-3"
+            >
+              <div class="border rounded p-3 bg-light">
+                <h6 class="mb-2">{{ T.wordsPreview || 'Preview' }}:</h6>
+                <omegaup-markdown :markdown="newCommentText"></omegaup-markdown>
+              </div>
+            </div>
           </div>
           <div class="d-flex justify-content-end mt-3">
+            <button
+              class="btn btn-secondary mr-2"
+              :disabled="!newCommentText.trim()"
+              @click="showCommentPreview = !showCommentPreview"
+            >
+              {{
+                showCommentPreview
+                  ? T.wordsHidePreview || 'Hide Preview'
+                  : T.wordsPreview || 'Preview'
+              }}
+            </button>
             <button
               class="btn btn-primary"
               :disabled="!newCommentText.trim()"
@@ -439,7 +484,7 @@ export default class ProblemDiscussion extends Vue {
 
   // Local UI state
   newCommentText = '';
-  selectedSort: 'created_at' | 'upvotes' = 'created_at';
+  selectedSort: 'most_recent' | 'least_recent' | 'upvotes' = 'most_recent';
   activeThreadCommentId: number | null = null;
   threadReplyText = '';
   currentPage = 1;
@@ -454,6 +499,8 @@ export default class ProblemDiscussion extends Vue {
   showDeleteConfirmationModal = false;
   deletingDiscussionId: number | null = null;
   deletingReplyId: number | null = null;
+  showCommentPreview = false;
+  showReplyPreview = false;
 
   // Markdown editors
   commentMarkdownEditor: Markdown.Editor | null = null;
@@ -508,12 +555,26 @@ export default class ProblemDiscussion extends Vue {
     sort_by: 'created_at' | 'upvotes';
     order: string;
   } {
+    let sortBy: 'created_at' | 'upvotes' = 'created_at';
+    let order = 'DESC';
+
+    if (this.selectedSort === 'most_recent') {
+      sortBy = 'created_at';
+      order = 'DESC';
+    } else if (this.selectedSort === 'least_recent') {
+      sortBy = 'created_at';
+      order = 'ASC';
+    } else if (this.selectedSort === 'upvotes') {
+      sortBy = 'upvotes';
+      order = 'DESC';
+    }
+
     return {
       problem_alias: this.problemAlias,
       page: this.currentPage,
       page_size: this.pageSize,
-      sort_by: this.selectedSort,
-      order: this.selectedSort === 'created_at' ? 'DESC' : 'DESC',
+      sort_by: sortBy,
+      order: order,
     };
   }
 
