@@ -1,10 +1,6 @@
 <template>
   <div data-arena-wrapper :class="backgroundClass">
-    <div
-      ref="headerSection"
-      class="text-center mt-4 pt-2"
-      :class="{ 'header-compact': isScrolled }"
-    >
+    <div class="text-center mt-4 pt-2">
       <h2 v-if="title !== null && !isScrolled" class="mb-4">
         <span>{{ title }}</span>
         <slot name="socket-status">
@@ -14,7 +10,7 @@
       </h2>
       <slot v-if="!isScrolled" name="clock"><div class="clock">∞</div></slot>
     </div>
-    <div class="nav-tabs-wrapper" :class="{ 'has-compact-header': isScrolled }">
+    <div class="nav-tabs-wrapper">
       <div v-if="isScrolled && title !== null" class="compact-header">
         <h2 class="compact-title">
           <span>{{ title }}</span>
@@ -54,7 +50,7 @@
         </li>
       </ul>
     </div>
-    <div ref="tabContent" class="tab-content" @scroll="onScroll">
+    <div class="tab-content" @scroll="onScroll">
       <div
         class="tab-pane fade"
         :class="{ 'show active': selectedTab === 'problems' }"
@@ -174,27 +170,9 @@ export default class Arena extends Vue {
   overflow: hidden;
 }
 
-[data-arena-wrapper] > .text-center {
-  flex-shrink: 0;
-  transition: opacity 0.2s ease, height 0.2s ease, margin 0.2s ease,
-    padding 0.2s ease;
-  overflow: hidden;
-}
-
-[data-arena-wrapper] > .text-center.header-compact {
-  height: 0;
-  margin: 0;
-  padding: 0;
-  opacity: 0;
-}
-
 [data-arena-wrapper] > .nav-tabs-wrapper {
   flex-shrink: 0;
   position: relative;
-}
-
-[data-arena-wrapper] > .nav-tabs-wrapper.has-compact-header {
-  padding-top: 0.5rem;
 }
 
 [data-arena-wrapper] > .nav-tabs-wrapper > .compact-header {
@@ -218,16 +196,6 @@ export default class Arena extends Vue {
   min-width: 0;
 }
 
-[data-arena-wrapper]
-  > .nav-tabs-wrapper
-  > .compact-header
-  > .compact-title
-  > span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 [data-arena-wrapper] > .nav-tabs-wrapper > .compact-header > .compact-clock {
   display: flex;
   align-items: center;
@@ -241,10 +209,6 @@ export default class Arena extends Vue {
   .clock {
   font-size: 1.5rem;
   line-height: 1;
-}
-
-[data-arena-wrapper] > .nav-tabs-wrapper > .nav {
-  flex-shrink: 0;
 }
 
 [data-arena-wrapper] > .tab-content {
